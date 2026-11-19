@@ -1,0 +1,26 @@
+<main class="stage" id="main">
+  <h1 class="sr-only">AI 额度重置与权益查询</h1>
+  <section class="platforms" id="platforms" aria-label="平台额度重置">
+    <noscript><p><a href="/quota">阅读额度规则、权益和官方来源</a></p></noscript>
+  </section>
+  <details class="more-card" id="more">
+    <summary><span class="more-name"><span class="more-symbol" aria-hidden="true"><i></i><i></i><i></i><i></i></span>更多信息</span><span class="more-arrow" aria-hidden="true">↗</span></summary>
+    <div class="more-body">
+      <section class="estimate-panel" aria-labelledby="estimate-title">
+        <h2 id="estimate-title">下次重置预估</h2>
+        <p>根据近期同类公告的发布间隔推算，按北京时间显示。</p>
+        <div class="estimate-grid" id="estimates"></div>
+      </section>
+      <nav aria-label="额度工具">
+        <a href="/quota#history">重置记录 <span>↗</span></a>
+        <a href="/quota#rules">额度规则 <span>↗</span></a>
+      </nav>
+      <p id="wish-note">「求重置」只表达愿望，不会改变官方额度。累计数字为点击次数。</p>
+      <div class="more-footer">
+        <button class="reload" id="reload">重新读取记录 <span aria-hidden="true">↻</span></button>
+        <a href="/privacy">隐私说明</a>
+      </div>
+    </div>
+  </details>
+  <span class="sr-only" id="sr-feedback" role="status" aria-live="polite"></span>
+</main>

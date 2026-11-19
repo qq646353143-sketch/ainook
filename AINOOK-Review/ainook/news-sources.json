@@ -1,0 +1,31 @@
+{
+  "interval_hours": 6,
+  "initial_days": 90,
+  "entries_per_source": 24,
+  "translate_per_cycle": 36,
+  "sources": [
+    {"id":"openai-news","name":"OpenAI 官方博客","url":"https://openai.com/news/rss.xml","method":"rss","kind":"official","owner":"openai","article_host":"openai.com","language":"en","enabled":true},
+    {"id":"openai-codex","name":"ChatGPT / Codex 更新日志","url":"https://learn.chatgpt.com/docs/changelog","method":"changelog","kind":"official","owner":"openai","language":"en","enabled":true},
+    {"id":"claude-notes","name":"Claude 官方更新日志","url":"https://support.claude.com/en/articles/12138966-release-notes","method":"changelog","kind":"official","language":"en","enabled":true},
+    {"id":"google-ai","name":"Google AI 官方博客","url":"https://blog.google/innovation-and-ai/technology/ai/rss/","method":"rss","kind":"official","owner":"google","article_host":"blog.google","language":"en","enabled":true},
+    {"id":"deepmind","name":"Google DeepMind","url":"https://deepmind.google/blog/rss.xml","method":"rss","kind":"official","owner":"google","article_host":"deepmind.google","article_redirect_hosts":["blog.google"],"language":"en","enabled":true},
+    {"id":"google-research","name":"Google Research","url":"https://research.google/blog/rss/","method":"rss","kind":"platform","owner":"google","article_host":"research.google","ai_only":true,"initial_limit":8,"language":"en","enabled":true},
+    {"id":"mistral-news","name":"Mistral AI 官方博客","url":"https://mistral.ai/news/rss","method":"rss","kind":"official","owner":"mistral","article_host":"mistral.ai","initial_limit":8,"language":"en","enabled":true},
+    {"id":"github-changelog","name":"GitHub Changelog","url":"https://github.blog/changelog/feed/","method":"rss","kind":"official","article_host":"github.blog","language":"en","ai_only":true,"enabled":true},
+    {"id":"deepseek","name":"DeepSeek 中文更新日志","url":"https://api-docs.deepseek.com/zh-cn/updates/","method":"changelog","kind":"official","language":"zh","enabled":true},
+    {"id":"huggingface","name":"Hugging Face 博客","url":"https://huggingface.co/blog/feed.xml","method":"rss","kind":"platform","article_host":"huggingface.co","language":"en","enabled":true},
+    {"id":"techcrunch-ai","name":"TechCrunch · AI","url":"https://techcrunch.com/category/artificial-intelligence/feed/","method":"rss","kind":"media","language":"en","enabled":true},
+    {"id":"ars-ai","name":"Ars Technica · AI","url":"https://feeds.arstechnica.com/arstechnica/technology-lab","method":"rss","kind":"media","language":"en","ai_only":true,"enabled":true},
+    {"id":"microsoft-research","name":"Microsoft Research","url":"https://www.microsoft.com/en-us/research/blog/feed/","method":"rss","kind":"platform","language":"en","ai_only":true,"enabled":true},
+    {"id":"qwen-github-api","name":"通义千问 GitHub 发布","url":"https://api.github.com/repos/QwenLM/Qwen3/releases","method":"github_releases","kind":"official","language":"en","enabled":true},
+    {"id":"meta-llama-github-api","name":"Meta Llama GitHub 发布","url":"https://api.github.com/repos/meta-llama/llama-models/releases","method":"github_releases","kind":"official","language":"en","enabled":true},
+    {"id":"xai-sdk-github-api","name":"xAI SDK GitHub 发布","url":"https://api.github.com/repos/xai-org/xai-sdk-python/releases","method":"github_releases","kind":"official","language":"en","enabled":true},
+    {"id":"nvidia-nemo-github-api","name":"NVIDIA NeMo GitHub 发布","url":"https://api.github.com/repos/NVIDIA/NeMo/releases","method":"github_releases","kind":"official","language":"en","enabled":true},
+    {"id":"llamacpp-github-api","name":"llama.cpp GitHub 发布","url":"https://api.github.com/repos/ggml-org/llama.cpp/releases","method":"github_releases","kind":"platform","language":"en","important_only":true,"enabled":true},
+    {"id":"arxiv-language","name":"arXiv · 计算与语言","url":"https://rss.arxiv.org/rss/cs.CL","method":"rss","kind":"platform","language":"en","important_only":true,"enabled":true},
+    {"id":"simon-voice","name":"Simon Willison · Bluesky","url":"https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed","actor":"did:plc:kft6lu4trxowqmter2b6vg6z","profile":"https://bsky.app/profile/simonwillison.net","method":"bluesky","kind":"voice","language":"en","excerpt_limit":500,"enabled":true},
+    {"id":"ethan-voice","name":"Ethan Mollick · Bluesky","url":"https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed","actor":"did:plc:flxq4uyjfotciovpw3x3fxnu","profile":"https://bsky.app/profile/emollick.bsky.social","method":"bluesky","kind":"voice","language":"en","excerpt_limit":500,"enabled":true},
+    {"id":"hn-ai-search","name":"Hacker News · AI 搜索线索","url":"https://hn.algolia.com/api/v1/search","method":"hn_search","kind":"lead","language":"en","keyword":"AI model","min_points":10,"enabled":true},
+    {"id":"gdelt-ai-search","name":"GDELT · 公开网页搜索","url":"https://api.gdeltproject.org/api/v2/doc/doc","method":"gdelt_search","kind":"lead","language":"en","keyword":"(\"OpenAI\" OR \"Anthropic\" OR \"DeepMind\" OR \"DeepSeek\") (\"model release\" OR \"AI model\") sourcelang:eng","enabled":false}
+  ]
+}

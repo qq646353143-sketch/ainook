@@ -1,0 +1,10 @@
+/outputs/
+/data/sample.json
+__pycache__/
+*.py[cod]
+*.log
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+.env
+.env.*

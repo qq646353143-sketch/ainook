@@ -1,0 +1,5 @@
+html:is([data-theme="day"],[data-theme="night"]) :is(.wish-control,.site-nav a,.news-search button){touch-action:manipulation;-webkit-tap-highlight-color:#89a8d02e}
+@media(prefers-reduced-motion:no-preference){
+  .site-nav a{transition:background-color .15s,color .15s,transform .15s}
+  .site-nav a:active{transform:translateY(.5px)}
+}

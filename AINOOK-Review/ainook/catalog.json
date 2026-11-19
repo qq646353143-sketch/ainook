@@ -1,0 +1,157 @@
+{
+  "reviewed_at": "2026-11-18T13:40:00+00:00",
+  "platforms": [
+    {
+      "id": "codex",
+      "name": "OpenAI",
+      "owner": "Codex",
+      "logo": "codex.svg",
+      "account_url": "https://chatgpt.com/codex/settings/usage",
+      "account_hint": "在 Codex 用量面板查看适用限额、剩余用量和恢复时间。",
+      "sources": [
+        {
+          "id": "openai-pricing",
+          "url": "https://learn.chatgpt.com/docs/pricing",
+          "label": "ChatGPT Learn · 官方用量说明",
+          "records": [
+            {"id":"codex-plan-windows","type":"cycle","title":"Plus 与标准 Business 按五小时窗口计量","audience":"Plus、Business 标准席位和 Pro 用户","summary":"官方用量说明列出 Plus 和标准 Business 的五小时用量估算，另可能适用周限额。Pro 目前没有五小时限额。","evidence":["local messages per five-hour period for Plus and Standard Business","Pro plans currently have no five-hour limit.","Weekly limits may also apply."]}
+          ]
+        },
+        {
+          "id": "openai-windows",
+          "url": "https://help.openai.com/en/articles/20001516-managing-usage-with-gpt-6-astra-in-work-and-codex",
+          "label": "OpenAI 帮助中心 · Work 与 Codex 用量",
+          "records": [
+            {"id":"codex-windows","type":"cycle","title":"恢复周期因方案而异","audience":"适用五小时窗口或周窗口的 Work 和 Codex 用户","summary":"按方案可能有五小时和每周两种窗口。五小时窗口在上一窗口结束后，由下一次使用开启。不同方案有例外，具体恢复时间以用量面板为准。","evidence":["usage limits may apply over a five-hour window and a weekly window","A new window starts when you send your first message in Work or Codex after the previous window ends."]}
+          ]
+        },
+        {
+          "id": "openai-referrals",
+          "url": "https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan",
+          "label": "OpenAI 帮助中心 · Codex 方案与邀请",
+          "records": [
+            {"id":"codex-banked","type":"offer","title":"部分邀请活动可获得一次可用重置","audience":"符合相应活动条件的 Plus 和 Pro 用户","summary":"部分成功邀请可增加一个可用的额度重置。活动规则、领取资格和过期时间以本人看到的邀请说明为准。","evidence":["a successful referral can add a banked Codex rate-limit reset","expiration, and any recipient requirements that apply"]}
+          ]
+        },
+        {
+          "id":"openai-reset-guide",
+          "url":"https://help.openai.com/en/articles/20001498-how-resets-work-in-codex",
+          "label":"OpenAI 帮助中心 · Codex 重置说明",
+          "records":[
+            {"id":"codex-reset-types","type":"policy","title":"重置卡到账后需兑换","audience":"收到相应活动权益的 Codex / ChatGPT Work 用户","summary":"重置卡可留待到期前兑换。平台直接执行的自动重置无需领取，覆盖账户及窗口取决于活动公告。","evidence":["Receiving one does not refresh your usage","accounts and usage limits selected for an offer"]}
+          ]
+        },
+        {
+          "id":"codex-post-2120999993079451919","format":"x_embed",
+          "url":"https://x.com/thsottiaux/status/2120999993079451919",
+          "label":"Tibo (@thsottiaux) · X 原帖",
+          "records":[
+            {"id":"codex-20261113","type":"banked","published_at":"2026-11-13T05:59:39+08:00","title":"Codex 重置卡已激活，预计陆续到账","audience":"本次发放覆盖的账户，具体资格以账户为准","summary":"Tibo 表示重置卡已激活，预计随后陆续进入账户。记录的是公告发布时间，个人是否到账及到期时间请在用量面板查看。","evidence":["the banked reset has been activated","accounts sometime soon"]}
+          ]
+        },
+        {
+          "id":"codex-post-2117035794678546764","format":"x_embed",
+          "url":"https://x.com/thsottiaux/status/2117035794678546764",
+          "label":"Tibo (@thsottiaux) · X 原帖",
+          "records":[
+            {"id":"codex-20261102","type":"banked","published_at":"2026-11-02T07:27:20+08:00","title":"第 28 天公布第二次重置卡","audience":"原帖未注明适用方案及到账时刻","summary":"Tibo 在第 28 天发布第二次储备重置卡的消息。","evidence":["Day 28/ Banked 2/2"]}
+          ]
+        },
+        {
+          "id":"codex-post-2116692529970311254","format":"x_embed",
+          "url":"https://x.com/thsottiaux/status/2116692529970311254",
+          "label":"Tibo (@thsottiaux) · X 原帖",
+          "records":[
+            {"id":"codex-20261101","type":"banked","published_at":"2026-11-01T08:43:20+08:00","title":"公布两次重置卡安排中的第一次","audience":"原帖未注明适用方案及到账时刻","summary":"原帖标记这是两次储备重置卡安排中的第一张。","evidence":["Banked 1/2"]}
+          ]
+        },
+        {
+          "id":"codex-post-2115273064481218829","format":"x_embed",
+          "url":"https://x.com/thsottiaux/status/2115273064481218829",
+          "label":"Tibo (@thsottiaux) · X 原帖",
+          "records":[
+            {"id":"codex-20261028","type":"reset","published_at":"2026-10-28T10:42:53+08:00","title":"第 23 天宣布当天安排重置","audience":"原帖未说明适用方案","summary":"原帖宣布当天有一次重置，未在该帖给出实际执行时刻及具体额度窗口。","evidence":["Day 23/","today is a reset"]}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "claude",
+      "name": "Claude",
+      "owner": "Anthropic",
+      "logo": "claude.svg",
+      "account_url": "https://claude.ai/settings/usage",
+      "account_hint": "在设置 → Usage 查看本账户的恢复时间、已用额度和可用重置。",
+      "sources": [
+        {
+          "id": "claude-windows",
+          "url": "https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work",
+          "label": "Claude 帮助中心 · 用量限制",
+          "records": [
+            {"id":"claude-windows","type":"cycle","title":"五小时会话与每周限额","audience":"受相应限制的付费方案","summary":"五小时会话额度从窗口首条消息开始计时。周额度按账户指定时刻恢复；已验证 Ultra 账户没有五小时限制。","evidence":["The period starts when you send your first message, and your limit resets in full five hours later.","Verified Ultra accounts don't have a five-hour limit","at a fixed time each week"]}
+          ]
+        },
+        {
+          "id": "claude-fable-52",
+          "url": "https://support.claude.com/en/articles/17506494-claude-fable-5-2-launch-offers",
+          "label": "Claude 帮助中心 · Fable 5.2 发布权益",
+          "records": [
+            {"id":"claude-fable-pro","type":"offer","title":"Fable 一周试用与一次重置","audience":"符合活动条件的 Pro 和 Team 标准席位","summary":"发布活动曾为适用席位提供一周额度内使用以及一次 Fable 重置。未使用的重置到期失效。","announced_on":"2026-11-09","expires_at":"2026-11-16T23:59:00-08:00","evidence":["launches on November 9, 2026","reset expires on November 16, 2026 at 11:59 pm PT"]},
+            {"id":"claude-fable-paid","type":"offer","title":"Fable 发布活动提供 1–3 次重置","audience":"符合条件的 Max、Ultra、Team 高级席位与旧版按席位 Enterprise 高级席位","summary":"可用次数取决于付费时长与席位，具体资格参见官方。它恢复已用 Fable 周额度，以及账户适用的五小时额度。","announced_on":"2026-11-09","expires_at":"2027-03-08T23:59:00-08:00","evidence":["One to three Fable limit resets","March 8, 2027 at 11:59 pm PT"]}
+          ]
+        },
+        {
+          "id":"claude-post-2120275296637321476","format":"x_embed",
+          "url":"https://x.com/ClaudeDevs/status/2120275296637321476",
+          "label":"ClaudeDevs · X 原帖",
+          "records":[
+            {"id":"claude-20261111","type":"banked","published_at":"2026-11-11T05:59:58+08:00","confirmed_issued":true,"expires_at":"2026-12-10T14:00:00-08:00","title":"四类付费方案获一次完整重置","audience":"Claude Pro、Max、Ultra 和 Team","summary":"ClaudeDevs 宣布赠送一次可按需使用的完整重置，涵盖所有模型和相关额度，需在公告截止前兑换。","evidence":["all Pro, Max, Ultra, and Team users one free full reset","December 10 at 2:00PM PT"]}
+          ]
+        },
+        {
+          "id":"claude-post-2102435538120691886","format":"x_embed",
+          "url":"https://x.com/claudeai/status/2102435538120691886",
+          "label":"Claude (@claudeai) · X 原帖",
+          "records":[
+            {"id":"claude-20260923","type":"banked","published_at":"2026-09-23T00:31:08+08:00","title":"Claude 宣布一张可留待使用的重置卡","audience":"Claude 订阅用户","summary":"官方宣布向订阅用户提供可留待使用的重置，并提高 Pro、Max 和 Team 的五小时限制。原帖未给出有效截止时间。","evidence":["providing subscription users a rate limit reset","save and use whenever you choose"]}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grok",
+      "name": "Grok",
+      "owner": "xAI",
+      "logo": "grok.svg",
+      "account_url": "https://grok.com/",
+      "account_hint": "在 Grok 设置 → Usage 查看周用量、恢复时间和额外额度。",
+      "sources": [
+        {
+          "id": "grok-usage",
+          "url": "https://docs.x.ai/grok/faq",
+          "label": "xAI 官方文档 · Grok 常见问题",
+          "records": [
+            {"id":"grok-weekly","type":"cycle","title":"适用方案共享周额度","audience":"已适用周额度的 SuperGrok 付费用户","summary":"周额度可跨 Grok 产品使用，按 Usage 显示的时刻恢复。免费 Chat 和 Voice 额度另有独立周期，本站暂无可确认的统一时刻。","evidence":["The usage pool limit resets every week on a schedule shown in the Usage tab in Settings.","these are separate from your weekly usage limit and resets on their own schedule"]},
+            {"id":"grok-shared-policy","type":"policy","title":"付费额度从分产品日限额转为共享周额度","audience":"官方宣布逐步适用新方案的 SuperGrok 付费用户","summary":"官方 FAQ 记录了从分产品日限额转为共享周额度的调整。各功能消耗的额度不同。","evidence":["Rolling out in June 2026","Previously, each Grok product had its own daily limits"]}
+          ]
+        },
+        {
+          "id":"grok-post-2119871982946971659","format":"x_embed",
+          "url":"https://x.com/bot/status/2119871982946971659",
+          "label":"Grok Bot (@bot) · X 原帖",
+          "records":[
+            {"id":"grok-20261110","type":"reset","published_at":"2026-11-10T03:17:20+08:00","confirmed_issued":true,"title":"Grok Bot 宣布已恢复周额度","audience":"Grok Bot 用户","summary":"Grok Bot 账号宣布已为所有 Grok Bot 用户重置周额度。公告范围限于 Grok Bot。","evidence":["reset weekly limits for all Grok Bot users"]}
+          ]
+        },
+        {
+          "id":"grok-post-2106083136002310193","format":"x_embed",
+          "url":"https://x.com/bot/status/2106083136002310193",
+          "label":"Grok Bot (@bot) · X 原帖",
+          "records":[
+            {"id":"grok-20261003","type":"reset","published_at":"2026-10-03T02:05:23+08:00","title":"Grok Bot 宣布一次用量重置","audience":"Grok Bot 用户","summary":"Grok Bot 账号宣布已重置所有 Grok Bot 用户的用量限制。原帖未说明重置涉及的具体窗口。","evidence":["reset usage limits for all Grok Bot users"]}
+          ]
+        }
+      ]
+    }
+  ]
+}

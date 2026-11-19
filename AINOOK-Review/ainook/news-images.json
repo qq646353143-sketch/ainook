@@ -1,0 +1,26 @@
+{
+  "nadella": {
+    "file": "news-nadella-portrait.webp",
+    "articles": ["108d95f376814446edb6b674", "afb1f8fc849417dafc40566f"],
+    "alt": "微软首席执行官 Satya Nadella 的肖像",
+    "caption": "Satya Nadella 资料照（2017 年）",
+    "credit": "Brian Smale 与 Microsoft",
+    "source": "https://commons.wikimedia.org/wiki/File:MS-Exec-Nadella-Satya-2017-08-31-8.jpg",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "width": 500,
+    "height": 750
+  },
+  "gemini": {
+    "file": "news-gemini-interface.webp",
+    "articles": ["95da0fde7d56c751139e0cc7", "c7a410ad3b8628097c727867", "6d8eb3bcd497222db1584f1a"],
+    "alt": "Google Gemini 网页界面的截图",
+    "caption": "Google Gemini 网页界面（资料图）",
+    "credit": "Google / Wikimedia Commons",
+    "source": "https://commons.wikimedia.org/wiki/File:Google_Gemini_Screenshot_(2026).png",
+    "license": "",
+    "license_url": "",
+    "width": 960,
+    "height": 540
+  }
+}
