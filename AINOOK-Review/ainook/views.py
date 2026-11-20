@@ -209,7 +209,7 @@ def page(path, data, canonical):
     css, theme = static('home.css'), static('theme.js')
     css += '\n' + static('interaction.css')
     if is_news:
-        css += '\n' + static('news.css')
+        css += '\n' + static('news.css') + '\n' + static('news-editorial.css')
     elif path == '/':
         css += '\n' + static('corner.css')
     policy = SECURITY_POLICY.replace("style-src 'self'", f"style-src 'self' {source_hash(css)}")

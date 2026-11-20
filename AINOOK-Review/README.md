@@ -4,7 +4,7 @@
 
 AINOOK 有三个入口。`/` 为额度追踪，`/news` 为前沿资讯，`/author` 为作者小屋。服务端是 Python 标准库的 `ThreadingHTTPServer`，界面使用原生 HTML、CSS 和 JavaScript。
 
-## 本地预览与测试
+## 本地运行与测试
 
 在 `AINOOK-Review/` 目录运行。Python 需 3.10 或更新版本。
 
@@ -23,7 +23,7 @@ python -m unittest discover -s tests -p test_ainook.py
 | --- | --- |
 | 路由、页面响应、本地服务 | `ainook/site.py` |
 | 资讯读取和七栏的唯一配置 | `ainook/news_edition.py` |
-| 资讯列表、正文和原地展开 | `ainook/news_views.py`、`ainook/static/news.css`、`ainook/static/news-reader.js` |
+| 资讯杂志版与全文页 | `ainook/news_views.py`、`ainook/static/news-editorial.css` |
 | 额度公告、官方链接和历史规则 | `ainook/catalog.json`、`ainook/quota.py` |
 | 首页、导航、作者小屋与日夜背景 | `ainook/views.py`、`ainook/static/layout.html`、`ainook/static/home.css`、`ainook/static/theme.js`、`ainook/static/author.html` |
 | 求重置、彩蛋与本地累计 | `ainook/static/home.js`、`ainook/static/burst.js`、`ainook/static/corner.js`、`ainook/wishes.py` |
@@ -32,14 +32,16 @@ python -m unittest discover -s tests -p test_ainook.py
 
 ## 资讯行为
 
-- 运行时从 `outputs/ainook/reader-edition.json` 只读加载外部刊次。程序在启动时加载；进程重新启动后读取下一期。日常新闻编写和更新归内容方。
+- 运行时从 `outputs/ainook/reader-edition.json` 只读加载外部刊次。程序在启动时加载，进程重新启动后读取下一期。日常新闻编写和更新归内容方。
 - 七栏顺序为精选简报、模型更新、官方公告、行业热点、国际新闻、全球财经、小道消息。精选简报显示全量，子栏按数据的 `c` 字段读取，小道消息从 `gossip` 数组读取。
 - 旧标签或未登记的类别只在全量页显示，等待内容方提供合法分类。站点不会给旧稿件推断新类别。
 - 旧地址 `/news/ai`、`/updates`、`/official`、`/hot` 由固定刊次模式跳转到对应新地址，`/models` 兼容跳转到模型更新。
-- 标题触发列表内展开，摘要保持纯文本；单独打开文章链接也可以阅读。
+- 精选简报首页提升当前排序中的第一条普通新闻为头条，之后展示三条速览和连续列表。分类、搜索、来源筛选、日期筛选及分页共用现有查询。
+- 点击标题进入独立全文页，显示刊次提供的完整段落、引文、来源及发布时间。页面上的返回链接直达文章所属栏目，浏览器后退可回到原先的筛选结果。
+- 阅读器兼容内容方交付的两种刊次写法。省略 `meta.timezone` 时按北京时间解析，小道消息缺少 `id` 时使用原有 `k`，显式提供的 `id` 仍优先使用。
 
 ## 交接约定
 
 - 网站源码、公共静态素材和测试保存在本目录。正式刊次、访客点击数据库、运行日志和凭据都留在运行环境。
 - 旧采集与数据库代码保留便于追溯。固定刊次模式使用外部 JSON，不需要启动旧采集或翻译任务。
-- 更新时按根目录 `AGENTS.md` 的范围和提交说明格式操作。页面改动验收七个栏目、旧链接和桌面／手机导航。
+- 更新时按根目录 `AGENTS.md` 的范围和提交说明格式操作。页面改动验收七个栏目、搜索筛选、分页、完整正文、旧链接和桌面／手机导航。

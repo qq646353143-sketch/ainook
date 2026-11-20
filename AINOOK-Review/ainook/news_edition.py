@@ -28,7 +28,7 @@ class NewsEdition:
         self.path = path
         data = json.loads(path.read_text(encoding='utf-8-sig'))
         metadata = data['meta']
-        if metadata['timezone'] != 'Asia/Shanghai':
+        if metadata.get('timezone', 'Asia/Shanghai') != 'Asia/Shanghai':
             raise ValueError('导入的时间必须为北京时间')
         self.updated = datetime.fromisoformat(metadata['updated']).replace(tzinfo=BEIJING)
         self.sources = {}
@@ -51,13 +51,15 @@ class NewsEdition:
             raise ValueError('资讯时间晚于刊次更新时间')
         title, summary, label = raw['t'], raw['s'], raw['n']
         body = raw['chat' if is_gossip else 'p']
-        if not all(isinstance(value, str) and value.strip() for value in (title, summary, label, raw['id'])):
+        id_field = 'k' if is_gossip and 'id' not in raw else 'id'
+        edition_id = raw[id_field]
+        if not all(isinstance(value, str) and value.strip() for value in (title, summary, label, edition_id)):
             raise ValueError('资讯缺少标题、摘要、来源或标识')
         if not isinstance(body, list) or not body or not all(isinstance(value, str) and value.strip() for value in body):
             raise ValueError('资讯缺少正文段落')
-        identifier = sha256(('reader-edition:' + raw['id']).encode()).hexdigest()[:24]
+        identifier = sha256(('reader-edition:' + edition_id).encode()).hexdigest()[:24]
         item = {
-            'id': identifier, 'edition_id': raw['id'], 'title': title, 'summary': summary, 'body': body,
+            'id': identifier, 'edition_id': edition_id, 'title': title, 'summary': summary, 'body': body,
             'source': label, 'url': source_url(raw['u']), 'published_at': timestamp.isoformat(),
             'translation': 'imported', 'unverified': is_gossip,
             # Legacy or unregistered categories remain readable in the unfiltered edition.
