@@ -4,22 +4,13 @@
 
 ## 顶层
 
-```json
-{
-  "meta": {
-    "site": "AI 每日速递",
-    "updated": "2026-11-19 08:40",
-    "window": "近 7 天",
-    "timezone": "Asia/Shanghai",
-    "tabs": ["精选简报", "模型更新", "官方公告", "行业热点", "国际新闻", "全球财经", "小道消息"],
-    "counts": { "nav": 83, "byCategory": { "模型更新": 14, "官方公告": 12 } }
-  },
-  "news": [ ... ],
-  "gossip": [ ... ]
-}
-```
+文件包含 `meta` 对象、`news` 新闻数组和 `gossip` 小道消息数组。`meta` 可附带 `site`、`window` 和 `tabs`。
 
-`meta.timezone` 必须是 `Asia/Shanghai`，`meta.updated` 是北京时间，格式 `YYYY-MM-DD HH:MM`。
+- `meta.updated` 为北京时间，格式为 `YYYY-MM-DD HH:MM`。
+- `meta.timezone` 可以省略，省略时按 `Asia/Shanghai` 解析。显式填写时取值为 `Asia/Shanghai`。
+- `meta.counts.news` 是新闻条数，`meta.counts.gossip` 是小道消息条数，`meta.counts.total` 是两者之和。`meta.counts.byCategory` 以分类名为键，记录各类新闻条数。
+
+以 `meta.counts` 为准，当前一期的实际条数以数据文件为准。比如 `meta.counts.total` 是精选简报总数，`meta.counts.byCategory["模型更新"]` 是模型更新条数，`meta.counts.gossip` 是小道消息条数。历史样例用 `meta.counts.nav` 表示总数。样例缺少分项统计时，按 `news[].c` 分组并核对 `gossip` 数组。
 
 ## news 每条
 
@@ -39,7 +30,8 @@
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
-| `id` | string | `g-` 开头 |
+| `k` | string | 稳定编号，格式为 `g` + 数字，例如 `g10`、`g6` |
+| `id` | string，可省略 | `g` + 数字编号，与 `k` 字段同值 |
 | `kind` | string | 固定 `gossip` |
 | `c` | string | 固定 `小道消息` |
 | `tag` | string | 类型标签，如 `X 言论`、`评论区` |
@@ -52,6 +44,6 @@
 
 ## 代码侧约束
 
-- `c` 的取值会直接查 `CATEGORIES`，出现未登记的分类会抛 `KeyError` 并导致 `/news` 返回 503。
-- `id` 重复会抛 `ValueError`。
+- 站点以 `c` 的取值选择新闻子栏。未登记的分类只在精选简报显示。
+- 同步校验取 `id`，缺少时用 `k`。标识缺失或在整期重复会抛 `ValueError`。
 - `d` 晚于 `meta.updated` 会抛 `ValueError`。

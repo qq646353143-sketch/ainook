@@ -26,15 +26,18 @@ def fetch(url):
 def validate(text):
     data = json.loads(text)
     meta = data.get('meta') or {}
-    if meta.get('timezone') != 'Asia/Shanghai':
+    if meta.get('timezone', 'Asia/Shanghai') != 'Asia/Shanghai':
         raise ValueError('meta.timezone 必须是 Asia/Shanghai')
     items = list(data.get('news') or []) + list(data.get('gossip') or [])
     if len(items) < MIN_ITEMS:
         raise ValueError('条数不足：%d' % len(items))
-    ids = [item.get('id') for item in items]
+    ids = [item.get('id') or item.get('k') for item in items]
+    if any(not isinstance(identifier, str) or not identifier.strip() for identifier in ids):
+        raise ValueError('资讯缺少标识')
     if len(set(ids)) != len(ids):
         raise ValueError('资讯标识重复')
-    bad = [item.get('id') for item in items if not item.get('u', '').startswith(('http://', 'https://'))]
+    bad = [identifier for item, identifier in zip(items, ids)
+           if not item.get('u', '').startswith(('http://', 'https://'))]
     if bad:
         raise ValueError('原链接无效：%s' % bad[:3])
     return data, len(items)

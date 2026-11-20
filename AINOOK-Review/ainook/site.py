@@ -216,6 +216,9 @@ def serve(port=7880, *, bind='127.0.0.1', scheduler=True, quota_scheduler=True, 
                 if not api:
                     suffix = '?' + query if query else ''
                     return self.respond(302, b'', 'text/plain', {'Location': route + suffix})
+            if route == '/news/sources' and not api:
+                body = news_views.source_page(sections=sections)
+                return self.html_page(path, {'title': news_views.PAGES[route], 'news_html': body}, canonical)
             if news is None:
                 if api:
                     return self.respond(503, {'error': '资讯服务暂不可用'})
@@ -236,15 +239,11 @@ def serve(port=7880, *, bind='127.0.0.1', scheduler=True, quota_scheduler=True, 
                 title, status = (item['title'], 200) if item else ('资讯不存在', 404)
             elif route == '/news/sources':
                 if edition:
-                    if api:
-                        return self.respond(200, {'mode': 'edition', 'updated': edition.updated.isoformat(),
-                                                  'sources': list(edition.sources.values())})
-                    return self.respond(302, b'', 'text/plain', {'Location': '/news'})
-                sources, logs = news.statuses()
-                if api:
-                    visible = ('id', 'name', 'url', 'method', 'kind', 'enabled', 'state', 'error', 'success_at', 'added')
-                    return self.respond(200, {'sources': [{key: source[key] for key in visible} for source in sources]})
-                body = news_views.source_page(sources, logs)
+                    return self.respond(200, {'mode': 'edition', 'updated': edition.updated.isoformat(),
+                                              'sources': list(edition.sources.values())})
+                sources, _ = news.statuses()
+                visible = ('id', 'name', 'url', 'method', 'kind', 'enabled', 'state', 'error', 'success_at', 'added')
+                return self.respond(200, {'sources': [{key: source[key] for key in visible} for source in sources]})
             elif route == '/models':
                 if api:
                     return self.respond(200, {'status': 'not_configured', 'items': []})

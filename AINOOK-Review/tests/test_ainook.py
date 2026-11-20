@@ -4,6 +4,7 @@ from contextlib import closing
 import gzip
 import json
 from pathlib import Path
+from runpy import run_path
 import socket
 import subprocess
 import sys
@@ -21,6 +22,24 @@ from ainook.news_translate import MARKER, translate_article, translate_pending
 from ainook.news_views import article_rows, detail
 from ainook.views import card_events
 from ainook.wishes import Wishes
+
+
+class EditionSyncTests(unittest.TestCase):
+    def test_validate_accepts_k_only_gossip_and_rejects_duplicate_ids(self):
+        sync_script = Path(__file__).resolve().parents[2] / 'scripts/sync_edition.py'
+        validate = run_path(str(sync_script))['validate']
+        payload = {
+            'meta': {'timezone': 'Asia/Shanghai'},
+            'news': [{'id': f'n-{index}', 'u': 'https://example.org/news'} for index in range(40)],
+            'gossip': [{'k': f'g{index}', 'u': 'https://example.org/gossip'} for index in range(6)],
+        }
+        self.assertEqual(validate(json.dumps(payload)), (payload, 46))
+        del payload['meta']['timezone']
+        self.assertEqual(validate(json.dumps(payload)), (payload, 46))
+
+        payload['news'][1]['id'] = payload['news'][0]['id']
+        with self.assertRaisesRegex(ValueError, '资讯标识重复'):
+            validate(json.dumps(payload))
 
 
 class AllowanceDataTests(unittest.TestCase):

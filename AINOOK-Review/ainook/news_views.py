@@ -12,10 +12,6 @@ from .views import china_time
 
 SECTIONS = EDITIONS
 PAGES = {**SECTIONS, '/news/sources': '采集来源', '/models': '模型排行榜'}
-METHODS = {'rss': 'RSS / Atom', 'changelog': '官方更新日志', 'hn_search': '公开社区搜索',
-           'gdelt_search': '公开网页搜索', 'bluesky': '公开作者动态', 'github_releases': 'GitHub 公开发布 API'}
-STATES = {'ok': '正常', 'unchanged': '未更新', 'pending': '待采集',
-          'error': '暂时失败', 'disabled': '停用', 'rate_limited': '限流等待'}
 PERIODS = {'7': '近 7 天', '30': '近 30 天', '90': '近 90 天', 'all': '全部日期'}
 _PICTURES = json.loads(Path(__file__).with_name('news-images.json').read_text(encoding='utf-8')).values()
 ARTICLE_IMAGES = {identifier: picture for picture in _PICTURES for identifier in picture['articles']}
@@ -113,21 +109,9 @@ def briefing_page(day, items):
     return frame('/news', f'<h1>精选简报</h1>{heading}{status}<div class="news-results">{body}</div>')
 
 
-def source_page(sources, logs):
-    rows = []
-    for source in sources:
-        state = STATES[source['state']] if source['enabled'] else '配置停用'
-        method = METHODS[source['method']]
-        detail = f' · {escape(source["error"])}' if source.get('error') else ''
-        at = f' · 上次成功 {china_time(source["success_at"])}' if source.get('success_at') else ''
-        rows.append(f'<article><h2><a href="{escape(source.get("profile") or source["url"])}" target="_blank" rel="noopener noreferrer">'
-                    f'{escape(source["name"])}</a></h2><p class="news-meta">{method} · {state}{detail}{at}</p></article>')
-    names = {source['id']: source['name'] for source in sources}
-    recent = ''.join(f'<li>{china_time(row["at"])} · {escape(names.get(row["source"], row["source"]))}'
-                     f' · {STATES[row["state"]]} · 新增 {row["added"]}'
-                     + (f' · {escape(row["detail"])}' if row['detail'] else '') + '</li>' for row in logs[:20])
-    return frame('/news/sources', '<h1>采集来源</h1><div class="news-results">' + ''.join(rows)
-                 + f'</div><details class="news-log"><summary>最近采集日志</summary><ul>{recent}</ul></details>')
+def source_page(*, sections=SECTIONS):
+    return frame('/news/sources', '<h1>采集来源</h1><p>资讯数据由外部每日提供，本站不做采集</p>',
+                 sections=sections)
 
 
 def unavailable(path, detail):

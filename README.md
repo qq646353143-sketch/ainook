@@ -1,45 +1,35 @@
-# ainnok · 资讯模块交接仓库
+# AINOOK 资讯模块
 
-本仓库**不复制整站代码**，只放"资讯模块"的补丁、数据契约与每日更新约定。站点其余部分（排版 / 字体 / 配色 / 作者小屋）由原项目维护，两边互不覆盖。
+[AINOOK-Review/](AINOOK-Review/README.md) 是现行站点源码和运行入口。仓库根目录提供 [维护约定](AGENTS.md)、[数据契约](DATA_CONTRACT.md) 和 [刊次更新方法](data/README.md)。
 
-## 一、这次同步了什么
-
-原项目资讯导航只有三分类（AI科技 / 国际新闻 / 财经），与《AI 每日速递》的七栏数据对不上，一导入就 `KeyError`，`/news` 直接返回 503。本次修成七栏：
+## 资讯栏目
 
 | 路由 | 名称 | 内容 |
 |---|---|---|
-| `/news` | 精选简报 | 全部资讯（含小道消息） |
+| `/news` | 精选简报 | 全部资讯，含小道消息 |
 | `/news/model` | 模型更新 | 新模型发布 |
-| `/news/official` | 官方公告 | 厂商官方公告、额度福利 |
-| `/news/hot` | 行业热点 | 行业事件、人物动态 |
-| `/news/world` | 国际新闻 | 重大政治、安全、外交 |
-| `/news/finance` | 全球财经 | 货币政策、监管、并购融资 |
-| `/rumors` | 小道消息 | 公开平台言论与社区议题 |
+| `/news/official` | 官方公告 | 官方公告和额度福利 |
+| `/news/hot` | 行业热点 | 行业事件和人物动态 |
+| `/news/world` | 国际新闻 | 国际政治、安全和外交 |
+| `/news/finance` | 全球财经 | 货币政策、监管和并购融资 |
+| `/rumors` | 小道消息 | 公开平台言论和社区议题 |
 
-## 二、改动文件（3 个）
+`/news/sources` 提供数据来源说明。
 
-1. `ainook/news_edition.py` — 分类映射与路由表改为七项；旧值 `AI科技/财经` 不再使用。
-2. `ainook/news_views.py` — 导航表同步为七项，与上表一致。
-3. `ainook/site.py` — 两处小补丁，见 `SITE_PATCH.md`。
+## 刊次更新与验收
 
-> 两个 py 文件可直接覆盖到项目同名路径。`site.py` 请按 `SITE_PATCH.md` 手工合入，不要整文件覆盖（你那边可能已经有别的改动）。
+内容方每日提供 `outputs/ainook/reader-edition.json`。可以手动放置，也可以通过 `scripts/sync_edition.py` 拉取。同步校验失败时会保留已有刊次。
 
-## 三、数据契约
+替换刊次后重启站点，检查七个栏目和来源页均返回 HTTP 200，并核对旧地址的跳转。
 
-资讯数据＝`outputs/ainook/reader-edition.json`，字段说明见 `DATA_CONTRACT.md`。
+以 `meta.counts` 为准，当前一期的实际条数以数据文件为准。比如 `meta.counts.total` 是精选简报总数，`meta.counts.byCategory["模型更新"]` 是模型更新条数，`meta.counts.gossip` 是小道消息条数。历史样例用 `meta.counts.nav` 表示总数。样例缺少分项统计时，按 `news[].c` 分组并核对 `gossip` 数组。
 
-**三条不可破坏的约定：**
+在仓库的 `AINOOK-Review/` 目录运行测试。
 
-1. 这是外部数据源，不要改字段名、不要删字段、不要在代码里写死新闻内容。
-2. 页面怎么排版都可以，但只能用 JSON 里已有的字段；需要新字段先列清单，由内容方添加。
-3. 分类一律以数据里的 `c` 字段为准，**禁止在前端写死分类映射表**（这正是本次 503 的根因）。
+```bash
+python -m unittest discover -s tests -p test_ainook.py
+```
 
-## 四、每日更新
+## 历史补丁
 
-内容方每天 07:45 产出新的 `reader-edition.json`，覆盖同名文件即可，代码无需改动。
-
-拉取失败时必须**保留旧文件**，不要清空——宁可显示昨天的内容，也不要白屏。
-
-## 五、验收
-
-替换后请确认：七栏全部 200；条数 83（精选简报）/ 14 / 12 / 10 / 20 / 22 / 5；`python3 -m unittest discover -s tests -p test_ainook.py` 全绿。
+[2026-11-18 归档](reference/legacy-patch-20261118/README.md) 保留早期的七栏补丁原件。维护和运行请使用 `AINOOK-Review/ainook/` 下的现行源码。

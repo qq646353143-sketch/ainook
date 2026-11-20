@@ -6,16 +6,18 @@ AINOOK 有三个入口。`/` 为额度追踪，`/news` 为前沿资讯，`/autho
 
 ## 本地运行与测试
 
-在 `AINOOK-Review/` 目录运行。Python 需 3.10 或更新版本。
+从完整仓库的 `AINOOK-Review/` 目录运行。Python 需 3.10 或更新版本。
 
 ```sh
-python -m ainook.site --port 7889 --no-scheduler
+python -m ainook.site --port 7889 --no-scheduler --data-dir ../outputs/ainook
 python -m unittest discover -s tests -p test_ainook.py
 ```
 
-首页 `http://127.0.0.1:7889/`，资讯 `http://127.0.0.1:7889/news`。Windows 可双击本目录的 `start-local.cmd`。
+首页 `http://127.0.0.1:7889/`，资讯 `http://127.0.0.1:7889/news`。Windows 的 `start-local.cmd` 默认读取本目录下的数据。读取仓库根目录同步的刊次时，使用上面的命令。
 
-完整刊次由内容方提供。只审阅七栏布局时，可把根目录现有的 `data/sample.json` **原样复制到独立临时目录**，命名为 `reader-edition.json`，并用 `--data-dir` 指向临时目录。用 `--wish-db` 把预览点击库也放在临时目录。样例共 17 条。验收完整刊次的历史基准为 83 / 14 / 12 / 10 / 20 / 22 / 5，实际数量随外部刊次变化。
+完整刊次由内容方提供。只审阅七栏布局时，可把根目录现有的 `data/sample.json` **原样复制到独立临时目录**，命名为 `reader-edition.json`，并用 `--data-dir` 指向临时目录。用 `--wish-db` 把预览点击库也放在临时目录。
+
+以 `meta.counts` 为准，当前一期的实际条数以数据文件为准。比如 `meta.counts.total` 是精选简报总数，`meta.counts.byCategory["模型更新"]` 是模型更新条数，`meta.counts.gossip` 是小道消息条数。历史样例用 `meta.counts.nav` 表示总数。样例缺少分项统计时，按 `news[].c` 分组并核对 `gossip` 数组。
 
 ## 代码地图
 
@@ -32,7 +34,7 @@ python -m unittest discover -s tests -p test_ainook.py
 
 ## 资讯行为
 
-- 运行时从 `outputs/ainook/reader-edition.json` 只读加载外部刊次。程序在启动时加载，进程重新启动后读取下一期。日常新闻编写和更新归内容方。
+- 使用上面的命令时，站点从仓库根目录的 `outputs/ainook/reader-edition.json` 只读加载外部刊次。程序在启动时加载，进程重新启动后读取下一期。日常新闻编写和更新归内容方。
 - 七栏顺序为精选简报、模型更新、官方公告、行业热点、国际新闻、全球财经、小道消息。精选简报显示全量，子栏按数据的 `c` 字段读取，小道消息从 `gossip` 数组读取。
 - 旧标签或未登记的类别只在全量页显示，等待内容方提供合法分类。站点不会给旧稿件推断新类别。
 - 旧地址 `/news/ai`、`/updates`、`/official`、`/hot` 由固定刊次模式跳转到对应新地址，`/models` 兼容跳转到模型更新。
@@ -43,5 +45,5 @@ python -m unittest discover -s tests -p test_ainook.py
 ## 交接约定
 
 - 网站源码、公共静态素材和测试保存在本目录。正式刊次、访客点击数据库、运行日志和凭据都留在运行环境。
-- 旧采集与数据库代码保留便于追溯。固定刊次模式使用外部 JSON，不需要启动旧采集或翻译任务。
+- 固定刊次模式使用外部 JSON。`/news/sources` 显示外部每日提供数据的说明。旧采集与数据库代码保留便于追溯。
 - 更新时按根目录 `AGENTS.md` 的范围和提交说明格式操作。页面改动验收七个栏目、搜索筛选、分页、完整正文、旧链接和桌面／手机导航。

@@ -37,9 +37,9 @@ __pycache__/  *.pyc                          临时文件
 
 硬规定：
 
-- `ainook/news_edition.py` 的 `CATEGORIES` 必须包含上述五个键。
+- `AINOOK-Review/ainook/news_edition.py` 的 `CATEGORIES` 必须包含上述五个键。
 - **禁止在前端写死分类映射表**，分类一律以数据里的 `c` 字段为准。
-- 分类未登记会抛 `KeyError` → `/news` 返回 503。历史上已经因此炸过一次。
+- 未登记的分类只在精选简报显示。历史补丁保存在 [归档目录](reference/legacy-patch-20261118/README.md)。
 - 改 UI 时只能用 JSON 里已有的字段；需要新字段，先列清单给内容方，不得在页面侧自己造。
 
 ## 四、被否决过的设计（不得重新引入）
@@ -51,7 +51,10 @@ __pycache__/  *.pyc                          临时文件
 ## 五、自检
 
 ```bash
-python3 -m unittest discover -s tests -p test_ainook.py
+cd AINOOK-Review
+python -m unittest discover -s tests -p test_ainook.py
 ```
 
-替换数据后确认：七栏全 200；完整数据时应为 83 / 14 / 12 / 10 / 20 / 22 / 5。
+替换数据后确认七栏和 `/news/sources` 全部返回 HTTP 200。
+
+以 `meta.counts` 为准，当前一期的实际条数以数据文件为准。比如 `meta.counts.total` 是精选简报总数，`meta.counts.byCategory["模型更新"]` 是模型更新条数，`meta.counts.gossip` 是小道消息条数。历史样例用 `meta.counts.nav` 表示总数。样例缺少分项统计时，按 `news[].c` 分组并核对 `gossip` 数组。
