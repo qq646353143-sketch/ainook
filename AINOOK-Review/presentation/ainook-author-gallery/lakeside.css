@@ -1,0 +1,5 @@
+.lakeside-objects [data-action="water"] { --x: 82.4%; --y: 55.3%; --w: 15.8%; --h: 8.9%; }
+.lakeside-shimmer { --x: 83.4%; --y: 57.7%; --w: 13.8%; --h: 3.4%; }
+.lakeside-water { --w: 9.4%; --h: 3.1%; }
+html[data-theme="night"] .lakeside { --lakeside-ripple: #d5eaff99; }
+html[data-theme="night"] .lakeside-guest img { filter: brightness(.71) saturate(.68) drop-shadow(0 1px 2px #392b216b); }

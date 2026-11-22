@@ -6,14 +6,14 @@ AINOOK 有三个入口。`/` 为额度追踪，`/news` 为前沿资讯，`/autho
 
 ## 本地运行与测试
 
-从完整仓库的 `AINOOK-Review/` 目录运行。Python 需 3.10 或更新版本。
+从完整仓库的 `AINOOK-Review/` 目录运行。Python 需 3.11 或更新版本。正式运行见 [部署说明](DEPLOY.md)。
 
 ```sh
-python -m ainook.site --port 7889 --no-scheduler --data-dir ../outputs/ainook
+python presentation/ainook-author-gallery/serve.py --port 7889 --data-dir ../outputs/ainook
 python -m unittest discover -s tests -p test_ainook.py
 ```
 
-首页 `http://127.0.0.1:7889/`，资讯 `http://127.0.0.1:7889/news`。Windows 的 `start-local.cmd` 默认读取本目录下的数据。读取仓库根目录同步的刊次时，使用上面的命令。
+首页 `http://127.0.0.1:7889/`，资讯 `http://127.0.0.1:7889/news`。Windows 的 `start-local.cmd` 默认读取仓库根目录的刊次，可带 `--data-dir` 指向单独的数据目录。
 
 完整刊次由内容方提供。只审阅七栏布局时，可把根目录现有的 `data/sample.json` **原样复制到独立临时目录**，命名为 `reader-edition.json`，并用 `--data-dir` 指向临时目录。用 `--wish-db` 把预览点击库也放在临时目录。
 
@@ -23,9 +23,10 @@ python -m unittest discover -s tests -p test_ainook.py
 
 | 维护范围 | 入口 |
 | --- | --- |
-| 路由、页面响应、本地服务 | `ainook/site.py` |
+| 最新版入口、房间目录及素材 | `presentation/ainook-author-gallery/serve.py` 和相邻的展示目录 |
+| 路由和页面响应 | `ainook/site.py` |
 | 资讯读取和七栏的唯一配置 | `ainook/news_edition.py` |
-| 资讯杂志版与全文页 | `ainook/news_views.py`、`ainook/static/news-editorial.css` |
+| 资讯杂志版与全文页 | `presentation/ainook-news-editorial/` 和 `ainook/news_views.py` |
 | 额度公告、官方链接和历史规则 | `ainook/catalog.json`、`ainook/quota.py` |
 | 首页、导航、作者小屋与日夜背景 | `ainook/views.py`、`ainook/static/layout.html`、`ainook/static/home.css`、`ainook/static/theme.js`、`ainook/static/author.html` |
 | 求重置、彩蛋与本地累计 | `ainook/static/home.js`、`ainook/static/burst.js`、`ainook/static/corner.js`、`ainook/wishes.py` |

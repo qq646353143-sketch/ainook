@@ -17,6 +17,7 @@ import time
 from urllib.parse import parse_qs, urlsplit
 
 from .quota import CHECK_INTERVAL, Quota, json_file
+from .quota_watch import discover
 from .news import News
 from .news_edition import EDITION_FILE, EDITIONS, LEGACY_SECTIONS, NewsEdition
 from . import news_views
@@ -107,14 +108,27 @@ class AllowanceSite:
             return True
 
     def start_checks(self):
+        token = os.environ.get('AINOOK_X_BEARER_TOKEN', '').strip()
+
         def work():
+            next_check = time.monotonic()
             while not self.stop_event.is_set():
                 try:
                     result = self.quota.sync()
                     print('AINOOK quota check:', json.dumps(result, ensure_ascii=False), flush=True)
                 except (OSError, ValueError) as exc:
                     print('AINOOK quota check:', type(exc).__name__, flush=True)
-                self.stop_event.wait(CHECK_INTERVAL)
+                if not self.stop_event.is_set():
+                    try:
+                        result = discover(self.quota.discovery_path, token)
+                        print('AINOOK quota discovery:', json.dumps(result, ensure_ascii=False), flush=True)
+                    except (OSError, ValueError) as exc:
+                        print('AINOOK quota discovery:', type(exc).__name__, flush=True)
+                next_check += CHECK_INTERVAL
+                now = time.monotonic()
+                if next_check < now:
+                    next_check += (int((now - next_check) / CHECK_INTERVAL) + 1) * CHECK_INTERVAL
+                self.stop_event.wait(next_check - now)
         threading.Thread(target=work, name='ainook-quota-check', daemon=True).start()
 
     def start_news(self):
@@ -147,8 +161,9 @@ class LocalHTTPServer(ThreadingHTTPServer):
 
 
 def serve(port=7880, *, bind='127.0.0.1', scheduler=True, quota_scheduler=True, data_dir=DEFAULT_DATA,
-          wish_path=DEFAULT_WISHES, origin_file=DEFAULT_ORIGIN):
+          wish_path=DEFAULT_WISHES, origin_file=DEFAULT_ORIGIN, versioned_assets=None):
     app = AllowanceSite(data_dir, wish_path, origin_file)
+    versioned_assets = versioned_assets or {}
     if not ipaddress.ip_address(bind).is_loopback and not https_origin(app.config()):
         raise ValueError('对外监听前，请配置 HTTPS 公开来源。')
     local = {f'http://127.0.0.1:{port}', f'http://localhost:{port}'}
@@ -334,6 +349,9 @@ def serve(port=7880, *, bind='127.0.0.1', scheduler=True, quota_scheduler=True, 
                     return self.respond(301, b'', 'text/plain', {'Location': '/' if path.startswith('/abc') else path.rstrip('/')})
                 if path.startswith('/assets/'):
                     name = path.removeprefix('/assets/')
+                    if name in versioned_assets:
+                        image, mime = versioned_assets[name]
+                        return self.respond(200, image, mime, age=31536000)
                     if name in app.assets and re.fullmatch(r'[a-zA-Z0-9_.-]+', name):
                         return self.respond(200, (STATIC / 'assets' / name).read_bytes(), app.assets[name], age=600)
                 if path == '/robots.txt':

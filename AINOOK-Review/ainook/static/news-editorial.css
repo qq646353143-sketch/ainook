@@ -340,7 +340,12 @@ html[data-theme="night"] .editorial-news {
 }
 .editorial-document-head .editorial-deck { margin-top: 17px; font-size: 17px; }
 .editorial-document-meta { margin-top: 18px; }
-.editorial-document-meta span { font-weight: 600; }
+.editorial-news .editorial-document-meta a {
+  color: var(--ed-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .editorial-document-body { padding-top: 24px; }
 .editorial-document-body .news-intro { margin-top: 0; color: var(--ed-ink); }
 .editorial-document-body .news-reading { margin: 0 0 31px; }

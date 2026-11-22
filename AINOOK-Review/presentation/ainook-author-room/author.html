@@ -1,0 +1,42 @@
+<main class="miniature-room" id="main">
+  <div class="miniature-room-layout">
+    <header class="miniature-room-intro">
+      <h1>作者小屋</h1>
+      <section class="miniature-room-author" aria-labelledby="author-name">
+        <h2 id="author-name">爱学习x</h2>
+        <p>进来坐会儿。</p>
+      </section>
+    </header>
+
+    <figure class="miniature-room-scene" aria-label="可探索的微缩书房">
+      <div class="miniature-room-art">
+        <img src="__ROOM_IMAGE__" width="1536" height="1024" alt="一间敞开的微缩书房。窗外有远山，窗前是木书桌，左右分别是书架和唱片柜。" decoding="async" fetchpriority="high">
+        <div class="miniature-room-lamp" aria-hidden="true"></div>
+        <div class="miniature-room-screen" aria-hidden="true"><span>hello.</span></div>
+        <div class="miniature-room-disc" aria-hidden="true"><span></span></div>
+        <div class="miniature-room-paper" aria-hidden="true"></div>
+        <div class="miniature-room-drops" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="miniature-room-controls" hidden>
+          <button type="button" data-object="lamp" aria-pressed="false" aria-label="台灯"><span aria-hidden="true">台灯</span></button>
+          <button type="button" data-object="note" aria-pressed="false" aria-label="手记"><span aria-hidden="true">手记</span></button>
+          <button type="button" data-object="computer" aria-pressed="false" aria-label="旧电脑"><span aria-hidden="true">旧电脑</span></button>
+          <button type="button" data-object="record" aria-pressed="false" aria-label="唱片机"><span aria-hidden="true">唱片机</span></button>
+          <button type="button" data-object="plant" aria-label="给盆栽浇水"><span aria-hidden="true">盆栽</span></button>
+        </div>
+      </div>
+    </figure>
+
+    <div class="miniature-room-caption">
+      <div class="miniature-room-feedback" role="status" aria-live="polite" aria-atomic="true">
+        <span id="miniature-room-object"></span>
+        <p id="miniature-room-message"></p>
+      </div>
+      <a class="miniature-room-back" href="/">返回首页 <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+
+  <section class="miniature-room-journal" aria-labelledby="miniature-room-journal-title">
+    <h2 id="miniature-room-journal-title">作者手记</h2>
+    <p>给日记、学习和创作记录留个位置。</p>
+  </section>
+</main>

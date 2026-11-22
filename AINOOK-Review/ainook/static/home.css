@@ -452,7 +452,6 @@ html[data-theme="night"] .brand-block{--brand-tagline:#d0dae7;--brand-credit:#ae
 .quota-page a,.quota-page-link{color:var(--quota-link);text-underline-offset:3px;text-decoration:underline}
 html[data-theme="day"] .quota-page{--quota-border:#bdcddd;--quota-surface:#f5f9fddc;--quota-muted:#4f6680;--quota-link:#174d78;--quota-warn:#854900}
 html[data-theme="night"] .quota-page{--quota-border:#364457;--quota-surface:#151e2bdc;--quota-muted:#aabbd0;--quota-link:#afd5f5;--quota-warn:#ffd097}
-html:is([data-theme="day"],[data-theme="night"]) .next-reset a:hover{text-decoration:underline}
 
 .quota-page .history-panel{padding-bottom:14px}
 .quota-page .history-filters{gap:6px;margin:10px 0}
@@ -476,13 +475,19 @@ html[data-theme="day"]{
   --nav-border:#94abc363;--nav-surface:#dbe7f25e;--nav-hover:#f6fbff94;--nav-active:#f7fbff;
   --nav-ink:#4b6582;--nav-current:#223853;--nav-shadow:#46638420;
   --estimate-surface:#f9fcff8c;--estimate-border:#9cb5cf68;--estimate-muted:#526c88;
-  --reset-unknown:#e0e8f0;--reset-known:#d7e9fb;--reset-issued:#d7efe5;--reset-issued-ink:#176747;
+  --reset-unknown:#e0e9f2;--reset-unknown-ink:#4d657f;--reset-unknown-dot:#798fa8;
+  --reset-signal:#f9e9c6;--reset-signal-ink:#725019;--reset-signal-dot:#b17b25;
+  --reset-issued:#d9f0e4;--reset-issued-ink:#1a5e44;--reset-issued-dot:#3a8866;
+  --reset-glint:#ffffff82;
 }
 html[data-theme="night"]{
   --nav-border:#8199bc38;--nav-surface:#090e177a;--nav-hover:#202b3a80;--nav-active:#223246;
   --nav-ink:#a9b9cd;--nav-current:#eff6ff;--nav-shadow:#0004;
   --estimate-surface:#15223399;--estimate-border:#7892b438;--estimate-muted:#a5b8cf;
-  --reset-unknown:#ffffff09;--reset-known:#4274ae38;--reset-issued:#57c49c22;--reset-issued-ink:#91dfba;
+  --reset-unknown:#a3b9d015;--reset-unknown-ink:#b8c6d6;--reset-unknown-dot:#859bb3;
+  --reset-signal:#e5b35e27;--reset-signal-ink:#f8d694;--reset-signal-dot:#dca54b;
+  --reset-issued:#6ccfa42b;--reset-issued-ink:#a6e6c7;--reset-issued-dot:#6bc79a;
+  --reset-glint:#ffffff0e;
 }
 .site-nav{display:flex;align-items:center;gap:3px;padding:4px;margin-left:auto;border:1px solid var(--nav-border);border-radius:11px;background:var(--nav-surface)}
 .site-nav a{display:grid;place-items:center;min-height:42px;padding:0 20px;border-radius:7px;color:var(--nav-ink);font-size:12px;white-space:nowrap}
@@ -493,12 +498,26 @@ html[data-theme="night"]{
   color:var(--nav-ink);font-size:12px;white-space:nowrap;
 }
 .site-nav .theme-switch:hover{color:var(--nav-current);background:var(--nav-hover)}
-.record-date a{display:inline-flex;align-items:center;gap:8px;text-align:center}
-.record-date a:hover time{text-decoration:underline;text-underline-offset:3px}
-html:is([data-theme="day"],[data-theme="night"]) .next-reset .next-reset-value{padding:3px 8px;border-radius:6px;background:var(--reset-unknown);font-weight:550}
-html:is([data-theme="day"],[data-theme="night"]) .next-reset .next-reset-value[data-status="scheduled"]{background:var(--reset-known)}
-html:is([data-theme="day"],[data-theme="night"]) .next-reset .next-reset-value[data-status="issued"]{background:var(--reset-issued);color:var(--reset-issued-ink)}
-.next-reset-value[data-status="issued"]::before{background:currentColor!important}
+.next-reset-value {
+  --badge-fill:var(--reset-unknown);--badge-ink:var(--reset-unknown-ink);--badge-dot:var(--reset-unknown-dot);
+}
+.next-reset-value[data-status="signal"] {
+  --badge-fill:var(--reset-signal);--badge-ink:var(--reset-signal-ink);--badge-dot:var(--reset-signal-dot);
+}
+.next-reset-value[data-status="issued"] {
+  --badge-fill:var(--reset-issued);--badge-ink:var(--reset-issued-ink);--badge-dot:var(--reset-issued-dot);
+}
+html:is([data-theme="day"],[data-theme="night"]) .next-reset .next-reset-value {
+  gap:8px;padding:4px 9px 4px 10px;border-radius:999px;
+  border:1px solid color-mix(in srgb,var(--badge-dot) 34%,transparent);
+  background:linear-gradient(var(--reset-glint),transparent),var(--badge-fill);
+  color:var(--badge-ink);font-weight:560;white-space:nowrap;
+}
+html:is([data-theme="day"],[data-theme="night"]) .next-reset .next-reset-value::before {
+  flex:0 0 7px;width:7px;height:7px;
+  background:radial-gradient(circle at 34% 28%,color-mix(in srgb,var(--badge-dot) 65%,white),var(--badge-dot) 75%);
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--badge-dot) 22%,transparent);
+}
 
 .estimate-panel{padding:0 0 14px}
 .estimate-panel h2{font-size:15px;margin:0 0 4px;font-weight:600}

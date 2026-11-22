@@ -1,0 +1,29 @@
+# AINOOK 正式部署
+
+正式入口为 `presentation/ainook-author-gallery/serve.py`，包含额度追踪、前沿资讯、作者小屋和朋友房间。用 Python 3.11 或更新版本启动。服务器需要系统时区数据和出站 HTTPS。站点可以在 Linux 主机上常驻，由反向代理处理公网 HTTPS。
+
+## 持久目录
+
+在源码目录之外准备一个持久目录。为运行网站的用户开启必要的读写权限。
+
+- `reader-edition.json` 由内容方交付。用仓库根目录的同步脚本校验后导入正式目录。站点在启动时读取刊次，导入成功后重启服务即可显示新一期。
+- `verified.json` 保存额度监测快照，`wishes.sqlite3` 保存求重置的累计次数。由正式站在持久目录中维护。
+- `public-origin.json` 存放实际正式地址，格式如 `{"origin":"https://ainook.example","public_scope":"official"}`。部署时替换示例域名。凭据通过主机的环境变量管理。
+
+## 启动
+
+从仓库的 `AINOOK-Review/` 目录运行，示例持久目录为 `/var/lib/ainook`。
+
+```sh
+python3 presentation/ainook-author-gallery/serve.py \
+  --production --port 7896 \
+  --data-dir /var/lib/ainook \
+  --wish-db /var/lib/ainook/wishes.sqlite3 \
+  --origin-file /var/lib/ainook/public-origin.json
+```
+
+用主机的进程管理工具配置自动启动和故障重启。将域名的 HTTPS 请求转发至同机的 `127.0.0.1:7896`，并把原请求的 `Host` 传给应用。只开放反向代理的公网入口。发布前校验正式地址与 `public-origin.json` 一致。
+
+正式模式要求有效刊次，并每十分钟启动一次额度检查。已登记的官方来源保留各自的退避规则。只有运行环境配置了有效的 `AINOOK_X_BEARER_TOKEN` 时，才会开启 X 公告搜索。做隔离检查时可加 `--no-quota-scheduler`。
+
+在真实公网地址打开首页、七个资讯栏目、资讯详情、作者小屋和两个朋友的小屋，测试日夜切换、求重置计数的写入与读取。随后从中国大陆不同线路测试首页和手机小屋素材。部署验证通过前保留上一版本的运行配置及持久数据备份。

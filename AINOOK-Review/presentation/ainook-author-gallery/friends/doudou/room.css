@@ -1,0 +1,106 @@
+.doudou-room .room-studies-intro h1 { margin-bottom: 14px; letter-spacing: .045em; }
+.doudou-room .room-studies-scene { margin-inline: -4px; }
+
+.doudou-set > :is(.doudou-light, .doudou-curtains, .doudou-window-plant, .doudou-cushion, .doudou-bookmark, .doudou-drops) {
+  position: absolute;
+  pointer-events: none;
+}
+.doudou-light {
+  inset: 0;
+  opacity: 0;
+  mix-blend-mode: screen;
+  clip-path: inset(15% 3.45% 16% 52%);
+  background:
+    radial-gradient(ellipse 3.4% 4.55% at 89.3% 34.8%, #fff9e9 22%, #ffe3aeb8 81%, transparent 99%),
+    radial-gradient(ellipse 10% 17% at 89.3% 36%, #ffc57d65, transparent 100%),
+    radial-gradient(ellipse 17% 15% at 81% 59%, #f3ad5f44, transparent 95%);
+  transition: opacity .32s ease;
+}
+.is-lamp .doudou-light { opacity: .65; }
+html[data-theme="night"] .is-lamp .doudou-light { opacity: 1; }
+
+.doudou-curtains {
+  inset: 18.82% 17.45% 45.8% 51.8%;
+  overflow: hidden;
+}
+.doudou-curtains i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 50.65%;
+  background:
+    linear-gradient(#694b3269, transparent 9%, #a06f4129 78%, #66482d36),
+    repeating-linear-gradient(90deg, #926e4d, #c8a481 9%, #e2c5a3 20%, #d1b08c 30%, #b08b65 52%, #97704e 72%, #bc9773 92%, #926e4d);
+  background-size: 100% 100%, 17% 100%;
+  border-radius: 0 0 3% 1%;
+  box-shadow: inset -1px 0 #67503a99;
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform .55s cubic-bezier(.35, .06, .2, 1);
+}
+.doudou-curtains i + i { inset: 0 0 0 auto; transform-origin: right; box-shadow: inset 2px 0 #67473172; }
+.is-curtain .doudou-curtains i { transform: scaleX(1); }
+html[data-theme="night"] .doudou-curtains i { filter: brightness(.86); }
+.doudou-window-plant {
+  inset: 0;
+  clip-path: polygon(52.9% 53.7%, 54.1% 53.3%, 54.4% 52.7%, 55.1% 52.6%, 55.8% 51.8%, 56.35% 51.7%, 56.95% 51.25%, 57.7% 51.1%, 58.4% 51.3%, 59.1% 51.18%, 59.65% 51.5%, 60.25% 51.52%, 60.48% 52.05%, 61% 52.35%, 60.95% 52.9%, 60.4% 53.3%, 60.7% 53.95%, 60.2% 55.55%, 52.9% 55.55%);
+}
+
+.doudou-cushion {
+  mask-image: linear-gradient(to right, transparent, #000 8% 92%, transparent),
+    linear-gradient(to bottom, transparent, #000 8% 92%, transparent);
+  mask-composite: intersect;
+}
+
+.doudou-bookmark {
+  left: 66.2%;
+  top: 57.3%;
+  width: 3.3%;
+  height: 1%;
+  opacity: 0;
+  border-radius: 90% 12% 90% 12%;
+  background: linear-gradient(5deg, #627449 47%, #a6ac71 50%, #88945d 58%);
+  box-shadow: 1px 1px 2px #4c4b3261;
+  transform: translateY(45%) rotate(-9deg);
+  transition: opacity .22s ease, transform .3s ease;
+}
+.is-book .doudou-bookmark { opacity: 1; transform: rotate(-9deg); }
+html[data-theme="night"] .doudou-bookmark { filter: brightness(.82); }
+
+.doudou-drops { inset: 50% 82% 33% 5.2%; }
+.doudou-drops i {
+  position: absolute;
+  left: 27%;
+  top: 30%;
+  width: clamp(3px, .45vw, 6px);
+  aspect-ratio: 1;
+  opacity: 0;
+  border-radius: 0 68% 68%;
+  background: #d9f7e9;
+  box-shadow: 0 0 2px #274037ad;
+  transform: rotate(45deg);
+}
+.doudou-drops i:nth-child(2) { left: 49%; top: 44%; animation-delay: .09s; }
+.doudou-drops i:nth-child(3) { left: 64%; top: 62%; animation-delay: .18s; }
+.is-watered .doudou-drops i { animation: doudou-drip .8s ease-in both; }
+.is-watered .doudou-drops i:nth-child(2) { animation-delay: .09s; }
+.is-watered .doudou-drops i:nth-child(3) { animation-delay: .18s; }
+@keyframes doudou-drip {
+  0% { opacity: 0; }
+  24%, 61% { opacity: .9; }
+  100% { opacity: 0; transform: translateY(340%) rotate(45deg); }
+}
+
+.doudou-controls [data-object="plant"] { --x: 12.75%; --y: 55.8%; --w: 14%; --h: 31%; }
+.doudou-controls [data-object="cushion"] { --x: 27%; --y: 62.7%; --w: 11.4%; --h: 8.7%; }
+.doudou-controls [data-object="curtain"] { --x: 49.1%; --y: 35.5%; --w: 6.5%; --h: 33%; }
+.doudou-controls [data-object="book"] { --x: 69.4%; --y: 58.2%; --w: 10%; --h: 4.7%; }
+.doudou-controls [data-object="lamp"] { --x: 89.3%; --y: 34.8%; --w: 8%; --h: 10%; }
+
+@media (max-width: 760px) {
+  .doudou-room .room-studies-scene { margin-inline: -8px; }
+  .doudou-room .room-studies-reaction { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .doudou-set :is(.doudou-light, .doudou-curtains i, .doudou-bookmark) { transition: none; }
+  .is-watered .doudou-drops i { animation: none; opacity: .9; }
+}

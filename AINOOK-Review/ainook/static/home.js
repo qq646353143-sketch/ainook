@@ -5,12 +5,12 @@
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const number=new Intl.NumberFormat('zh-CN').format;
   const beijingDay=now=>new Date(now+8*3600000).toISOString().slice(0,10);
-  const preciseTime=new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
   const initial=$('initial-cards');
   const initialData=JSON.parse(initial.content.textContent);
   initial.remove();
   const platforms=initialData.items.map(({id,name,owner,logo})=>({id,name,owner,logo}));
   let cards=platforms.map(p=>({...p})),loadError=false,loading=false;
+  let clockTimer;
   let owner;try{owner=sessionStorage.getItem('easel-preview-client')||crypto.randomUUID();sessionStorage.setItem('easel-preview-client',owner);}catch{owner=crypto.randomUUID();}
   // Preserve unsent click batches when the existing site changes direction.
   const prefix='easel.preview.wishes.'+owner+'.';
@@ -27,19 +27,16 @@
   function latestRecord(c){
     const event=c.latest;
     if(!event)return '<span class="time-label">距上次重置公告</span><div class="elapsed unknown">暂无收录</div>';
-    const link='/quota?days=all&platform='+encodeURIComponent(c.id)+'#'+encodeURIComponent(event.id);
     const age=elapsed(event,Date.now());
     const stamp=event.published_at||event.date;
     const clock=age
       ?`<div class="elapsed"><b data-days>${age.days}</b><span class="unit">天</span><b data-hours>${age.hours}</b><span class="unit">小时</span></div>`
       :'<div class="elapsed unknown">暂无确切时刻</div>';
-    const note=event.status?event.title+' · '+event.status:event.title;
-    return `<span class="time-label">距上次重置公告</span>${clock}<div class="record-date"><a href="${esc(link)}" title="查看完整记录 · 北京时间"><time datetime="${esc(stamp)}">${esc(event.date.replaceAll('-','.'))}${event.time?' '+esc(event.time):''}</time><small>${esc(event.type)} ↗</small></a></div><p class="record-headline">${esc(note)}</p>`;
+    return `<span class="time-label">距上次重置公告</span>${clock}<div class="record-date"><time datetime="${esc(stamp)}">${esc(event.date.replaceAll('-','.'))}${event.time?' '+esc(event.time):''}</time></div><p class="record-headline">${esc(event.form)}</p>`;
   }
   function upcoming(c,now){
-    if(c.issued_day===beijingDay(now))return {state:'issued',label:'已发放重置'};
-    const stamp=Date.parse(c.next_event?.at);
-    if(stamp>now)return {state:'scheduled',label:preciseTime.format(stamp),url:c.next_event.url};
+    if(c.issued_day===beijingDay(now))return {state:'issued',label:'已经重置'};
+    if(Date.parse(c.next_event?.at)>now||Date.parse(c.signal_until)>now)return {state:'signal',label:'已有信号'};
     return {state:'unknown',label:'尚未公布'};
   }
   function drawUpcoming(element,c,now){
@@ -47,15 +44,6 @@
     if(element.dataset.status===next.state&&element.textContent===next.label)return;
     element.dataset.status=next.state;
     element.textContent=next.label;
-    if(next.url){
-      const link=document.createElement('a');
-      link.href=next.url;
-      link.target='_blank';
-      link.rel='noopener noreferrer';
-      link.textContent=next.label;
-      link.title='官方公告时间 · 北京时间';
-      element.replaceChildren(link);
-    }
   }
   function showEstimates(now){
     $('estimates').innerHTML=cards.map(c=>{
@@ -69,6 +57,7 @@
   }
   function updateClock(){
     const now=Date.now();
+    const midnight=Date.parse(beijingDay(now)+'T00:00:00+08:00')+86400000;
     cards.forEach(c=>{
       const card=$('card-'+c.id);
       if(!card)return;
@@ -80,6 +69,8 @@
       drawUpcoming(card.querySelector('.next-reset-value'),c,now);
     });
     if(more?.open)showEstimates(now);
+    clearTimeout(clockTimer);
+    clockTimer=setTimeout(updateClock,Math.min(30000,midnight-now));
   }
   const refresh='<svg class="reset-icon" viewBox="0 0 24 24" aria-hidden="true" width="18" height="18"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M13 6.7h4.3V2.4"/></svg>';
   function render(){
@@ -117,6 +108,23 @@
     for(const [id,total]of Object.entries(data.totals))if(wishes[id]&&!wishes[id].busy)wishes[id].base=total;
     loadError=false;
   }
+  async function refreshCards(){
+    if(document.hidden||loading)return;
+    try{
+      const data=await api('/api/site/cards');
+      if(loading)return;
+      const previous=cards;
+      applyCards(data);
+      cards.forEach((c,index)=>{
+        if(JSON.stringify(c.latest)!==JSON.stringify(previous[index].latest)){
+          $('card-'+c.id).querySelector('.reset-time').innerHTML=latestRecord(c);
+        }
+        paintCount(c.id);
+        if(wishes[c.id].error)drain(c.id);
+      });
+      updateClock();
+    }catch{}
+  }
   function restorePending(){platforms.forEach(p=>{if(wishes[p.id].queue.length)drain(p.id);});}
   async function load(){
     if(loading)return;
@@ -136,8 +144,7 @@
   window.addEventListener('online',()=>{if(loadError)load();else platforms.forEach(p=>drain(p.id));});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)platforms.forEach(p=>stash(p.id));else{updateClock();restorePending();}});
   window.addEventListener('pagehide',()=>{platforms.forEach(p=>{stash(p.id);for(const b of wishes[p.id].queue)fetch('/api/site/wishes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b),keepalive:true}).catch(()=>{});});});
-  setInterval(async()=>{if(document.hidden||loading)return;try{const d=await api('/api/site/wishes');for(const [id,total]of Object.entries(d.totals)){if(wishes[id]&&!wishes[id].busy){wishes[id].base=total;paintCount(id);}if(wishes[id]?.error)drain(id);}}catch{}},30000);
-  setInterval(updateClock,30000);
+  setInterval(refreshCards,30000);
   applyCards(initialData);
   render();
   restorePending();

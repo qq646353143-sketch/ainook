@@ -1,6 +1,7 @@
 """Allowance boundary and degraded-source behavior, using isolated state."""
 from datetime import datetime, timedelta, timezone
 from contextlib import closing
+from email.message import Message
 import gzip
 import json
 from pathlib import Path
@@ -11,10 +12,13 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from ainook.quota import Quota, normalize
+from ainook.quota_watch import classify, discover
+from ainook.site import AllowanceSite
 from ainook.news import News, search_entries
 from ainook.news_copy import evidence_copy, reading_copy
 from ainook.news_events import additional_excerpt, event_attention, evidence_sentences, same_event, story_key
@@ -43,6 +47,73 @@ class EditionSyncTests(unittest.TestCase):
 
 
 class AllowanceDataTests(unittest.TestCase):
+    def test_quota_source_honors_retry_after(self):
+        now = datetime.fromisoformat('2026-11-20T10:00:00+08:00')
+        headers = Message()
+        headers['Retry-After'] = '1800'
+        with tempfile.TemporaryDirectory() as tmp:
+            quota = Quota(Path(tmp) / 'verified.json')
+            calls = []
+
+            def limited(source):
+                calls.append(source['id'])
+                raise HTTPError(source['url'], 429, 'limited', headers, None)
+
+            quota.sync(limited, now=now)
+            self.assertTrue(calls)
+            calls.clear()
+            quota.sync(limited, now=now + timedelta(minutes=10))
+            self.assertEqual(calls, [])
+            quota.sync(limited, now=now + timedelta(minutes=30))
+            self.assertTrue(calls)
+
+    def test_transient_source_failure_keeps_a_confirmed_card_green_for_the_day(self):
+        now = datetime.fromisoformat('2026-11-20T10:00:00+08:00')
+        with tempfile.TemporaryDirectory() as tmp:
+            quota = Quota(Path(tmp) / 'verified.json')
+            codex = quota.platforms[0]
+            record = next(record for source in codex['sources'] for record in source['records']
+                          if record['type'] == 'banked')
+            record.update(published_at=(now - timedelta(hours=1)).isoformat(), confirmed_issued=True)
+            quota.sync(lambda src: normalize(' '.join(p for rec in src['records'] for p in rec['evidence'])), now=now)
+
+            def timed_out(_):
+                raise TimeoutError
+
+            later = now + timedelta(minutes=10)
+            quota.sync(timed_out, now=later)
+            self.assertEqual(card_events(quota.overview(now=later)[0]['records'], now=later)['issued_day'], '2026-11-20')
+
+    def test_reset_signal_and_confirmed_issuance_are_separate(self):
+        now = datetime.fromisoformat('2026-11-20T17:00:00+08:00')
+        deadline = datetime.fromisoformat('2026-11-20T23:00:00+08:00')
+        record = {
+            'id': 'reset-test', 'type': 'reset', 'status': 'verified', 'title': '测试重置',
+            'published_at': '2026-11-20T08:00:00+08:00', 'url': 'https://quota.example/official',
+            'signal_until': deadline.isoformat(),
+        }
+        pending = card_events([record], now=now)
+        self.assertEqual(pending['latest']['form'], '通用重置')
+        self.assertEqual(pending['signal_until'], deadline.isoformat())
+        self.assertIsNone(pending['issued_day'])
+        self.assertIsNone(card_events([record], now=deadline)['signal_until'])
+        self.assertIsNone(card_events([{**record, 'status': 'stale'}], now=now)['signal_until'])
+        self.assertIsNone(card_events([{**record, 'type': 'offer'}], now=now)['latest'])
+
+        for kind, form in (('reset', '通用重置'), ('banked', '发放重置卡')):
+            with self.subTest(kind=kind):
+                completed = {**record, 'type': kind, 'confirmed_issued': True}
+                result = card_events([completed], now=now)
+                self.assertEqual(result['latest']['form'], form)
+                self.assertEqual(result['issued_day'], '2026-11-20')
+                self.assertIsNone(result['signal_until'])
+                self.assertIsNone(card_events([{**completed, 'issued_on': '2026-11-21'}], now=now)['issued_day'])
+        upcoming = {**record, 'signal_until': '2026-11-21T09:00:00+08:00'}
+        issued = {**record, 'id': 'issued-test', 'confirmed_issued': True,
+                  'published_at': '2026-11-20T16:30:00+08:00'}
+        after_midnight = datetime.fromisoformat('2026-11-21T00:00:00+08:00')
+        self.assertIsNone(card_events([upcoming, issued], now=after_midnight)['signal_until'])
+
     def test_forecast_and_announcement_are_separate(self):
         now = datetime.fromisoformat('2026-11-18T13:00:00+00:00')
         with tempfile.TemporaryDirectory() as tmp:
@@ -97,6 +168,101 @@ class AllowanceDataTests(unittest.TestCase):
             wishes = Wishes(path, ['codex', 'another-platform'])
             self.assertTrue(wishes.add('codex', 20, 'test-batch-key-0001')['duplicate'])
             self.assertEqual(wishes.totals(), {'codex': 20, 'another-platform': 0})
+
+
+class QuotaDiscoveryTests(unittest.TestCase):
+    def test_scheduler_uses_ten_minute_start_times(self):
+        site = MagicMock()
+        site.quota.sync.return_value = {}
+        site.stop_event.is_set.side_effect = [False, False, False, False, True]
+        with (patch('ainook.site.threading.Thread', side_effect=lambda target, **_: MagicMock(start=target)),
+              patch('ainook.site.time.monotonic', side_effect=[0, 3, 605]),
+              patch('ainook.site.discover', return_value={'status': 'disabled'}) as scan,
+              patch('builtins.print')):
+            AllowanceSite.start_checks(site)
+        self.assertEqual(site.quota.sync.call_count, 2)
+        self.assertEqual(scan.call_count, 2)
+        self.assertEqual([args[0][0] for args in site.stop_event.wait.call_args_list], [597, 595])
+
+    def test_classifier_rejects_general_rules_and_ambiguous_announcements(self):
+        self.assertEqual(
+            classify('thsottiaux', "We've just issued a free banked reset for eligible Codex users."),
+            ('codex', 'banked', True),
+        )
+        self.assertEqual(
+            classify('bot', 'We just reset weekly limits for all Grok Bot users.'),
+            ('grok', 'reset', True),
+        )
+        self.assertEqual(
+            classify('ClaudeDevs', 'We will send a banked reset to eligible Claude users.'),
+            ('claude', 'banked', False),
+        )
+        for handle, text in (
+            ('untrusted', 'We just reset weekly limits for all Grok Bot users.'),
+            ('bot', 'We will reset weekly limits every week for Grok Bot users.'),
+            ('bot', 'We just issued a fix for Grok Bot users who cannot reset weekly limits.'),
+            ('OpenAI', "We haven't issued a banked reset for Codex yet."),
+            ('OpenAI', "We've just issued a banked reset for Codex referral rewards."),
+            ('ClaudeDevs', 'Claude Pro users can redeem a banked reset anytime.'),
+        ):
+            with self.subTest(text=text):
+                self.assertIsNone(classify(handle, text))
+
+    def test_poll_pagination_overlap_and_failure_retain_the_snapshot(self):
+        now = datetime.fromisoformat('2026-11-20T10:00:00+08:00')
+        posts = [
+            {'id': '10', 'author_id': '101', 'created_at': '2026-11-20T01:47:00Z',
+             'text': "We've just issued a free banked reset for eligible Codex users."},
+            {'id': '11', 'author_id': '102', 'created_at': '2026-11-20T01:50:00Z',
+             'text': 'We will send a banked reset to eligible Claude users.'},
+        ]
+        users = [{'id': '101', 'username': 'thsottiaux'}, {'id': '102', 'username': 'ClaudeDevs'}]
+
+        def page(rows, **meta):
+            return {'data': rows, 'includes': {'users': users}, 'meta': {'result_count': len(rows), **meta}}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            quota = Quota(Path(tmp) / 'verified.json')
+            destination = quota.discovery_path
+            self.assertEqual(discover(destination, '', now=now), {'status': 'disabled'})
+            self.assertFalse(destination.exists())
+            requests = []
+
+            def retrieve(params, _):
+                requests.append(dict(params))
+                if 'next_token' not in params:
+                    return page(posts[:1], next_token='page-two')
+                return page(posts[1:])
+
+            self.assertEqual(discover(destination, 'fixture-token', now=now, fetch=retrieve)['accepted'], 2)
+            self.assertEqual(requests[1]['next_token'], 'page-two')
+            snapshot = json.loads(destination.read_text(encoding='utf-8'))
+            codex, claude, _ = [card_events(item['records'], now=now) for item in quota.overview(now=now)]
+            self.assertEqual(codex['issued_day'], '2026-11-20')
+            self.assertNotEqual(claude['issued_day'], '2026-11-20')
+            self.assertTrue(claude['signal_until'])
+
+            headers = Message()
+            headers['Retry-After'] = '1800'
+
+            def failed_page(params, _):
+                if 'next_token' in params:
+                    raise HTTPError('https://api.x.com/', 429, 'limited', headers, None)
+                return page([], next_token='second')
+
+            later = now + timedelta(minutes=10)
+            self.assertEqual(discover(destination, 'fixture-token', now=later, fetch=failed_page)['reason'], 429)
+            saved = json.loads(destination.read_text(encoding='utf-8'))
+            self.assertEqual(saved['through'], snapshot['through'])
+            self.assertEqual(saved['records'], snapshot['records'])
+            requests.clear()
+            status = discover(destination, 'fixture-token', now=later + timedelta(minutes=10), fetch=retrieve)
+            self.assertEqual(status['status'], 'waiting')
+            self.assertEqual(requests, [])
+
+            discover(destination, 'fixture-token', now=later + timedelta(minutes=30), fetch=retrieve)
+            self.assertEqual(requests[0]['start_time'], '2026-11-20T01:44:45Z')
+            self.assertEqual(len(json.loads(destination.read_text(encoding='utf-8'))['records']), 2)
 
 
 class PublicHTTPTests(unittest.TestCase):

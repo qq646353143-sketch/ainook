@@ -1,17 +1,19 @@
 """Fetch public, curated quota evidence and keep a last-known-good projection."""
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 from html.parser import HTMLParser
 import json
 from pathlib import Path
 import re
 import tempfile
+from urllib.error import HTTPError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 CATALOG = Path(__file__).with_name('catalog.json')
 BEIJING = timezone(timedelta(hours=8))
-CHECK_INTERVAL = 6 * 3600
+CHECK_INTERVAL = 10 * 60
 MAX_AGE = timedelta(hours=48)
 MAX_BYTES = 4 * 1024 * 1024
 
@@ -30,9 +32,49 @@ def instant(value):
 
 def json_file(path, default):
     try:
-        return json.loads(path.read_text(encoding='utf-8-sig'))
+        value = json.loads(path.read_text(encoding='utf-8-sig'))
+        return value if isinstance(value, type(default)) else default
     except (OSError, ValueError):
         return default
+
+
+def write_snapshot(path, state):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, encoding='utf-8', mode='w', delete=False) as stream:
+            temporary = Path(stream.name)
+            json.dump(state, stream, ensure_ascii=False, indent=2)
+        temporary.replace(path)
+    finally:
+        if temporary:
+            temporary.unlink(missing_ok=True)
+
+
+def http_retry_at(error, now):
+    if not isinstance(error, HTTPError):
+        return None
+    fallback = now + timedelta(seconds=CHECK_INTERVAL)
+    if error.code in (401, 402, 403):
+        fallback = now + timedelta(hours=1)
+    if error.code not in (401, 402, 403, 429, 503):
+        return None
+    headers = error.headers or {}
+    retry_after = headers.get('Retry-After', '')
+    try:
+        retry = now + timedelta(seconds=int(retry_after))
+    except (ValueError, OverflowError):
+        try:
+            retry = parsedate_to_datetime(retry_after)
+            if retry.tzinfo is None:
+                retry = retry.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError, OverflowError):
+            retry = fallback
+    try:
+        reset = datetime.fromtimestamp(int(headers.get('x-rate-limit-reset', '')), timezone.utc)
+    except (ValueError, OSError, OverflowError):
+        reset = fallback
+    return max(fallback, retry, reset)
 
 
 class PageText(HTMLParser):
@@ -116,6 +158,7 @@ class Quota:
         self.catalog = json.loads(catalog_path.read_text(encoding='utf-8'))
         self.platforms = self.catalog['platforms']
         self.data_path = Path(data_path)
+        self.discovery_path = self.data_path.with_name('quota-discovery.json')
 
     def sync(self, fetch=fetch_text, *, now=None):
         now = now or utcnow()
@@ -124,8 +167,11 @@ class Quota:
 
         def check(source):
             old = previous.get(source['id'], {})
+            retry_at = instant(old.get('retry_at'))
+            if retry_at and retry_at > now:
+                return source['id'], old
             verified = dict(old.get('verified', {}))
-            state = {'checked_at': now.isoformat(), 'verified': verified}
+            state = {'checked_at': now.isoformat(), 'verified': verified, 'review': old.get('review', [])}
             try:
                 text = fetch(source)
                 mismatches = []
@@ -137,42 +183,43 @@ class Quota:
                 state['review'] = mismatches
             except (OSError, ValueError) as exc:
                 state['error'] = getattr(exc, 'code', None) or type(exc).__name__
+                if retry := http_retry_at(exc, now):
+                    state['retry_at'] = retry.isoformat()
             return source['id'], state
 
         with ThreadPoolExecutor(max_workers=3) as workers:
             state = dict(workers.map(check, sources))
-        self.data_path.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile(
-            dir=self.data_path.parent, encoding='utf-8', mode='w', delete=False
-        ) as stream:
-            json.dump(state, stream, ensure_ascii=False, indent=2)
-            temporary = Path(stream.name)
-        try:
-            temporary.replace(self.data_path)
-        finally:
-            temporary.unlink(missing_ok=True)
+        write_snapshot(self.data_path, state)
         return {key: {'error': row.get('error'), 'review': row.get('review', [])}
                 for key, row in state.items()}
 
     def overview(self, *, now=None):
         now = now or utcnow()
         cache = json_file(self.data_path, {})
+        discovered = json_file(self.discovery_path, {}).get('records', {})
         result = []
         for platform in self.platforms:
             item = {key: platform[key] for key in ('id', 'name', 'owner', 'logo', 'account_url', 'account_hint')}
             item['records'] = []
             for source in platform['sources']:
                 state = cache.get(source['id'], {})
+                evidence = state.get('verified', {})
+                failure = state.get('error')
+                temporary_failure = (failure == 429 or isinstance(failure, int) and failure >= 500
+                                     or failure in ('TimeoutError', 'URLError', 'OSError', 'ConnectionError'))
                 for record in source['records']:
-                    last_verified = state.get('verified', {}).get(record['id'], self.catalog['reviewed_at'])
+                    last_verified = evidence.get(record['id'], self.catalog['reviewed_at'])
                     verified = instant(last_verified)
                     expired = instant(record.get('expires_at'))
                     starts = instant(record.get('starts_at'))
+                    cached_event = (temporary_failure and record['id'] in evidence
+                                    and (record.get('confirmed_issued') or record.get('signal_until')
+                                         or record.get('scheduled_at')))
                     if expired and now >= expired:
                         status = 'expired'
                     elif record['id'] in state.get('review', []):
                         status = 'review'
-                    elif not verified or now - verified > MAX_AGE or state.get('error'):
+                    elif not verified or now - verified > MAX_AGE or (failure and not cached_event):
                         status = 'stale'
                     elif starts and starts > now:
                         status = 'scheduled'
@@ -184,5 +231,8 @@ class Quota:
                     public.update(source=source['label'], url=source['url'], verified_at=last_verified,
                                   checked_at=state.get('checked_at'), status=status)
                     item['records'].append(public)
+            known_urls = {record['url'].casefold() for record in item['records']}
+            item['records'].extend(record for record in discovered.values()
+                                   if record['platform'] == item['id'] and record['url'].casefold() not in known_urls)
             result.append(item)
         return result

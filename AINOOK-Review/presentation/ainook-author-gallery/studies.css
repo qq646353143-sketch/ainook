@@ -1,0 +1,48 @@
+.room-studies-effect[data-effect="lamp"] {
+  background:
+    radial-gradient(ellipse 24% 27% at 50% 34%, #fff3d3ed 11%, #ffdd8f96 58%, transparent 98%),
+    radial-gradient(ellipse 49% 44% at 50% 52%, #ffc47a69, #e8974a28 60%, transparent 94%);
+}
+html[data-theme="day"] .room-studies-effect[data-effect="lamp"] { opacity: .62; }
+html[data-theme="night"] .room-studies-effect[data-effect="lamp"] { filter: none; }
+[data-room-variant="garden"] .room-studies-effect[data-effect="lamp"] {
+  background:
+    radial-gradient(ellipse 23% 24% at 50% 42%, #fff8e1f7 18%, #ffe3a3c9 65%, transparent 95%),
+    radial-gradient(ellipse 47% 45% at 50% 48%, #ffcc7d67, #f4a2552b 62%, transparent 96%);
+}
+.room-studies-effect[data-effect="screen"] { clip-path: polygon(1% 0, 98% 0, 100% 100%, 4% 100%); }
+.room-studies-effect[data-effect="glass"]::before {
+  content: "";
+  position: absolute;
+  inset: 25% 0 auto;
+  height: 46%;
+  border: 1px solid #f2f9ffb8;
+  border-radius: 50%;
+  animation: gallery-glass-ripple .8s ease-out both;
+}
+@keyframes gallery-glass-ripple {
+  from { opacity: .9; transform: scale(.46); }
+  to { opacity: 0; transform: scale(.98); }
+}
+.room-studies-effect[data-effect="bookmark"]::before {
+  content: "";
+  position: absolute;
+  left: 9%;
+  top: 27%;
+  width: 86%;
+  height: 32%;
+  border-radius: 76% 16% 75% 19%;
+  background: linear-gradient(6deg, #718147 47%, #c0c584 52%, #97a25f 58%);
+  box-shadow: 0 1px 1px #39412a60;
+  transform: rotate(-14deg);
+}
+html[data-theme="night"] .room-studies-effect[data-effect="bookmark"] { filter: brightness(.73); }
+.room-studies-effect[data-effect="speaker"] i { animation-name: gallery-speaker-pulse; }
+@keyframes gallery-speaker-pulse {
+  from { opacity: .68; transform: scale(.4); }
+  to { opacity: 0; transform: scale(1.16); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-studies-effect[data-effect="glass"]::before { animation: none; }
+}

@@ -14,12 +14,13 @@ STATIC = Path(__file__).with_name('static')
 PAGES = {
     '/': ('ainook. · AI 额度重置与权益查询', '查找 OpenAI Codex、Claude 和 Grok 的额度恢复规则、官方权益和个人用量入口。'),
     '/quota': ('额度与权益 · ainook.', '查看 AI 工具官方恢复周期、临时赠送、限额变化与历史记录。'),
-    '/author': ('作者小屋 · ainook.', '了解 ainook. 与作者爱学习。'),
+    '/author': ('作者小屋 · ainook.', '了解 ainook. 与作者爱学习x。'),
     '/privacy': ('隐私说明 · ainook.', '了解 ainook. 的点击计数、浏览器存储和连接数据。'),
 }
 SECURITY_POLICY = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; font-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
 TYPES = {'cycle': '常规恢复', 'offer': '临时权益', 'policy': '限额变化',
          'banked': '重置卡', 'reset': '临时重置'}
+CARD_RESET_FORMS = {'reset': '通用重置', 'banked': '发放重置卡'}
 RANGES = {'7': '7 天', '30': '30 天', '90': '90 天', 'all': '全部'}
 STATES = {
     'verified': '来源已核对', 'expired': '已到期 · 历史记录', 'scheduled': '尚未开始',
@@ -61,19 +62,35 @@ def ordered_events(records):
 def card_events(records, *, now=None):
     now = now or utcnow()
     today = now.astimezone(BEIJING).date()
-    events = [record for record in ordered_events(records)
+    today_key = today.isoformat()
+    resets = [record for record in records if record['type'] in CARD_RESET_FORMS]
+    events = [record for record in ordered_events(resets)
               if event_day(record) <= today and (instant(record.get('published_at')) or now) <= now]
-    trusted = [record for record in records if record['status'] in ('verified', 'conditional', 'scheduled')]
-    issued = next((record for record in events if record.get('confirmed_issued')
-                   and record['status'] == 'verified'), None)
+    trusted = [record for record in resets if record['status'] in ('verified', 'conditional', 'scheduled')
+               and (event_day(record) or today) <= today and (instant(record.get('published_at')) or now) <= now]
+    confirmed = [record for record in events if record.get('confirmed_issued') and record['status'] == 'verified'
+                 and (record.get('issued_on') or event_day(record).isoformat()) <= today_key]
+    issued = [record.get('issued_on') or event_day(record).isoformat()
+              for record in confirmed]
+    latest_confirmation = {}
+    for record in confirmed:
+        if stamp := instant(record.get('published_at')):
+            latest_confirmation[record['type']] = max(stamp, latest_confirmation.get(record['type'], stamp))
     scheduled = [(instant(record.get('scheduled_at')), record) for record in trusted]
-    upcoming = min(((stamp, record) for stamp, record in scheduled if stamp and stamp > now),
+    upcoming = min(((stamp, record) for stamp, record in scheduled
+                    if stamp and stamp > now and not record.get('confirmed_issued')),
                    key=lambda item: item[0], default=None)
+    signals = [deadline for record in trusted if not record.get('confirmed_issued')
+               and (deadline := instant(record.get('signal_until'))) and deadline > now
+               and (published := instant(record.get('published_at')) or now) >=
+               latest_confirmation.get(record['type'], published)]
+    signal_until = max(signals, default=None)
     result = {
         'latest': None,
-        'issued_day': (issued.get('issued_on') or event_day(issued).isoformat()) if issued else None,
+        'issued_day': max(issued, default=None),
         'next_event': {'at': upcoming[0].isoformat(), 'id': upcoming[1]['id'],
                        'url': upcoming[1]['url']} if upcoming else None,
+        'signal_until': signal_until.isoformat() if signal_until else None,
         'estimate': None,
     }
     if not events:
@@ -84,7 +101,7 @@ def card_events(records, *, now=None):
         'id': latest['id'], 'date': event_day(latest).isoformat(),
         'time': when.astimezone(BEIJING).strftime('%H:%M') if when else None,
         'published_at': latest.get('published_at'),
-        'type': TYPES[latest['type']], 'title': latest['title'],
+        'type': TYPES[latest['type']], 'form': CARD_RESET_FORMS[latest['type']], 'title': latest['title'],
         'status': STATES[latest['status']] if latest['status'] in ('stale', 'review', 'expired') else '',
     }
     same_type = [record for record in events if record['type'] == latest['type']

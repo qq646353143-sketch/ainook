@@ -1,0 +1,223 @@
+.lakeside {
+  --lakeside-ink: #e8edf0;
+  --lakeside-copy: #acbec8;
+  --lakeside-comment: #f2d4a8;
+  --lakeside-rule: #abbfcc42;
+  --lakeside-horizon: #c9f4fe65;
+  --lakeside-ripple: #f3d9acbd;
+  position: relative;
+  z-index: 1;
+  width: calc(100% - 72px);
+  max-width: 1220px;
+  min-height: calc(100svh - 70px);
+  margin: auto;
+  padding: clamp(35px, 4.1vw, 62px) 0 54px;
+  color: var(--lakeside-ink);
+}
+html[data-theme="day"] .lakeside {
+  --lakeside-ink: #21394f;
+  --lakeside-copy: #415c71;
+  --lakeside-comment: #65472b;
+  --lakeside-rule: #52708c47;
+  --lakeside-horizon: #fff4cbbe;
+  --lakeside-ripple: #effcf6e0;
+}
+.lakeside-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 210px) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas: "intro scene" "caption scene";
+  column-gap: clamp(26px, 3.7vw, 54px);
+}
+.lakeside-intro { grid-area: intro; padding-top: clamp(44px, 7vw, 101px); }
+.lakeside-intro h1 { margin: 0 0 22px; font-size: clamp(31px, 3.3vw, 46px); line-height: 1.15; font-weight: 600; letter-spacing: -.055em; }
+.lakeside-intro h2 { margin: 0 0 7px; font-size: 14px; font-weight: 650; }
+.lakeside p { margin: 0; color: var(--lakeside-copy); font-size: 13px; line-height: 1.85; }
+.lakeside-caption { grid-area: caption; align-self: end; padding-bottom: clamp(44px, 7vw, 105px); }
+.lakeside-reaction { min-height: 64px; margin: 0 0 12px; padding-left: 11px; }
+.lakeside-reaction:has(p:not(:empty)) { border-left: 1px solid var(--lakeside-rule); }
+.lakeside-reaction p { color: var(--lakeside-comment); }
+.lakeside-caption a, html[data-theme="day"] .lakeside-caption a { display: inline-block; padding-block: 9px; color: var(--lakeside-copy); font-size: 12px; }
+.lakeside-caption a:hover { text-decoration: underline; text-underline-offset: .24em; }
+.lakeside-journal { min-height: 110px; margin-top: 17px; padding: 22px 0 0; border-top: 1px solid var(--lakeside-rule); }
+.lakeside-journal h2 { margin: 0 0 6px; font-size: 18px; font-weight: 600; }
+
+.lakeside-scene { grid-area: scene; min-width: 0; margin: 0; align-self: center; }
+.lakeside-art { position: relative; aspect-ratio: 4 / 3; overflow: hidden; isolation: isolate; }
+.lakeside-illustration {
+  position: absolute;
+  inset: 0 auto auto 0;
+  display: block;
+  width: 100%;
+  height: 200%;
+  clip-path: inset(0 0 50% 0);
+  pointer-events: none;
+  user-select: none;
+}
+html[data-theme="night"] .lakeside-illustration { top: calc(-100% + var(--night-offset, 0%)); clip-path: inset(50% 0 0 0); }
+.lakeside-objects button, .lakeside-effects > div {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
+  transform: translate(-50%, -50%);
+}
+.lakeside-objects button {
+  z-index: 2;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.lakeside-objects button:focus-visible, html[data-theme="day"] .lakeside-objects button:focus-visible {
+  outline: 2px solid #ffedbf;
+  outline-offset: 0;
+  box-shadow: 0 0 0 4px #223449c4;
+}
+.lakeside-effects > div { pointer-events: none; }
+.lakeside-effects > div[hidden] { display: none; }
+
+/* Scene coordinates are shared by the two registered lighting passes. */
+.lakeside-objects [data-action="breeze"] { --x: 49%; --y: 43.9%; --w: 8%; --h: 46%; }
+.lakeside-objects [data-action="letter"] { --x: 32.4%; --y: 75.45%; --w: 11.4%; --h: 6.5%; }
+.lakeside-objects [data-action="guest"] { --x: 17.8%; --y: 86.5%; --w: 18%; --h: 12.4%; }
+.lakeside-objects [data-action="water"] { --x: 82%; --y: 55.8%; --w: 20.5%; --h: 10%; }
+.lakeside-shimmer { --x: 82.1%; --y: 59.6%; --w: 20%; --h: 4%; }
+.lakeside-breeze { --x: 56%; --y: 48.7%; --w: 26%; --h: 16%; }
+.lakeside-letter { --x: 32.9%; --y: 75.3%; --w: 12.6%; }
+.lakeside-guest { --x: 17.4%; --y: 83.3%; --w: 12.8%; --h: 11.8%; }
+.lakeside-water { --w: 11.8%; --h: 3.7%; }
+
+.lakeside-shimmer i {
+  position: absolute;
+  width: 74%;
+  height: 1px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, var(--lakeside-horizon), transparent);
+  animation: lakeside-shimmer 7.5s ease-in-out infinite alternate;
+}
+.lakeside-shimmer i:nth-child(2) { top: 39%; left: 12%; width: 49%; animation-delay: -3s; }
+@keyframes lakeside-shimmer {
+  from { opacity: .12; transform: translateX(-7%) scaleX(.72); }
+  to { opacity: .68; transform: translateX(8%) scaleX(1.08); }
+}
+
+.lakeside-breeze i {
+  position: absolute;
+  inset: 27% auto auto 80%;
+  width: 6%;
+  aspect-ratio: 1.7;
+  border-radius: 80% 15% 80% 20%;
+  background: linear-gradient(135deg, #d2d589, #819451);
+  box-shadow: inset 0 1px 0 #f1edaa9e;
+  opacity: 0;
+  animation: lakeside-leaf 1.55s ease-out both;
+}
+.lakeside-breeze i:nth-child(2) { top: 8%; left: 62%; animation-delay: .2s; }
+.lakeside-breeze i:nth-child(3) { top: 39%; left: 90%; animation-delay: .34s; }
+.lakeside-breeze i:nth-child(4) { top: 17%; left: 70%; animation-delay: .44s; }
+html[data-theme="night"] .lakeside-breeze i {
+  width: clamp(2px, .35vw, 4px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff0b2;
+  box-shadow: 0 0 7px 2px #ffc958af;
+  animation-name: lakeside-flicker;
+  animation-duration: 1.7s;
+}
+@keyframes lakeside-leaf {
+  0% { opacity: 0; transform: translate(0, 0) rotate(-30deg); }
+  30% { opacity: .91; }
+  72% { opacity: .82; transform: translate(-430%, 25%) rotate(-133deg) skewX(12deg); }
+  100% { opacity: 0; transform: translate(-880%, 145%) rotate(-246deg); }
+}
+@keyframes lakeside-flicker {
+  0%, 100% { opacity: 0; }
+  25% { opacity: 1; transform: translate(-180%, -195%); }
+  58% { opacity: .35; }
+  80% { opacity: .92; }
+  100% { transform: translate(-780%, -315%); }
+}
+
+.lakeside-effects > .lakeside-letter {
+  z-index: 1;
+  width: max-content;
+  height: auto;
+  padding: 10px 8px 11px;
+  border-radius: 2px 2px 5px 2px;
+  background: linear-gradient(145deg, #fff3d9, #ead0a2 85%);
+  box-shadow: 1px 4px 10px #37281d5c;
+  color: #503a31;
+  font-family: "KaiTi", "STKaiti", "Microsoft YaHei", serif;
+  font-size: clamp(10px, .95vw, 14px);
+  line-height: 1.4;
+  transform: translate(-52%, -89%) rotate(-8deg);
+  animation: lakeside-unfold .35s cubic-bezier(.2,.7,.28,1) both;
+}
+.lakeside-letter span { display: block; }
+.lakeside-letter span:first-child { margin-bottom: 6px; opacity: .73; font-size: .82em; }
+html[data-theme="night"] .lakeside-letter { filter: brightness(.85) saturate(.9); }
+@keyframes lakeside-unfold {
+  from { opacity: 0; transform: translate(-52%, -40%) rotate(1deg) scale(.68); }
+  to { opacity: 1; transform: translate(-52%, -89%) rotate(-8deg); }
+}
+
+.lakeside-guest { overflow: hidden; }
+.lakeside-guest img {
+  display: block;
+  position: absolute;
+  inset: auto 0 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: brightness(.86) saturate(.78) drop-shadow(0 1px 2px #5537216b);
+  animation: lakeside-peek .62s cubic-bezier(.18,.5,.28,1) both;
+}
+html[data-theme="night"] .lakeside-guest img { filter: brightness(.62) saturate(.68) drop-shadow(0 1px 2px #392b216b); }
+@keyframes lakeside-peek {
+  from { opacity: .1; transform: translateY(85%); }
+  80% { transform: translateY(-4%); }
+  to { opacity: 1; transform: none; }
+}
+
+.lakeside-water i {
+  position: absolute;
+  inset: 10% 8%;
+  border: 1px solid var(--lakeside-ripple);
+  border-radius: 50%;
+  animation: lakeside-ripple 1.28s ease-out both;
+}
+.lakeside-water i:nth-child(2) { animation-delay: .13s; }
+.lakeside-water i:nth-child(3) { animation-delay: .27s; }
+@keyframes lakeside-ripple {
+  from { opacity: .95; transform: scale(.14); }
+  56% { opacity: .5; }
+  to { opacity: 0; transform: scale(1.48); }
+}
+
+@media (max-width: 760px) {
+  .lakeside { width: calc(100% - 36px); padding-top: 27px; }
+  .lakeside-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "intro" "scene" "caption"; row-gap: 4px; }
+  .lakeside-intro { padding-top: 0; }
+  .lakeside-intro h1 { margin-bottom: 14px; }
+  .lakeside-scene { margin-inline: -10px; }
+  .lakeside-caption { padding-bottom: 0; }
+  .lakeside-reaction { min-height: auto; margin: 7px 0 6px; }
+  .lakeside-reaction:has(p:empty) { margin: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lakeside-art *, html[data-theme="night"] .lakeside-breeze i { animation: none !important; }
+  .lakeside-breeze i { opacity: .78; }
+  .lakeside-water i:nth-child(2) { inset: 22% 19%; }
+  .lakeside-water i:nth-child(3) { inset: 32% 31%; }
+}

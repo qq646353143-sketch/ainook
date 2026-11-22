@@ -1,0 +1,32 @@
+.acan-original .room-studies-intro h1 { margin-bottom: 14px; }
+.acan-original .room-studies-caption { align-self: end; padding-bottom: clamp(25px, 8vw, 128px); }
+.acan-original .room-studies-reaction { min-height: 60px; }
+
+/* Both panels share the same placements on the 1024 × 768 scene. */
+.acan-original [data-piece="lamp"] { --x: 8.69%; --y: 59.77%; --w: 6%; --h: 8.5%; }
+.acan-original :is([data-piece="left"], [data-piece="right"]) {
+  --y: 52.48%; --w: 15%; --h: 11.4%;
+  border-radius: 3px;
+  transform: translate(-50%, -100%);
+}
+.acan-original [data-piece="left"] { --x: 63.18%; }
+.acan-original [data-piece="right"] { --x: 81.28%; }
+.acan-original [data-piece="cups"] {
+  --x: 72.9%; --y: 52.73%; --w: 5.9%; --h: 4%;
+  transform: translateX(-50%);
+}
+
+.acan-original .duo-lamp { --x: 8.8%; --y: 62.4%; --w: 14%; --h: 18%; }
+.acan-original .duo-monitor { --y: 46.75%; --w: 14.06%; --h: 10.55%; border-radius: 0; }
+.acan-original .duo-monitor-left { --x: 63.18%; }
+.acan-original .duo-monitor-right { --x: 81.28%; }
+.acan-original .duo-tower { --y: 67.84%; --w: 3%; --h: 12.1%; }
+.acan-original .duo-tower-left { --x: 54.83%; }
+.acan-original .duo-tower-right { --x: 91.2%; }
+.acan-original .duo-team { --x: 73%; --y: 57.6%; --w: 36%; }
+.acan-original .duo-cups { --x: 72.75%; --y: 52.43%; --w: 5.3%; --h: 3.15%; }
+
+@media (max-width: 760px) {
+  .acan-original .room-studies-caption { padding-bottom: 0; }
+  .acan-original .room-studies-reaction { min-height: 0; }
+}

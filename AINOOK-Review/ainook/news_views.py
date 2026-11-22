@@ -26,6 +26,10 @@ def original_link(url, label):
     return f'<a href="{escape(url)}" target="_blank" rel="noopener noreferrer">{escape(label)} ↗</a>'
 
 
+def article_source(item):
+    return original_link(item['url'], item['source'] + ' · 原文')
+
+
 def figure(identifier):
     picture = ARTICLE_IMAGES.get(identifier)
     if not picture:
@@ -57,10 +61,7 @@ def article_content(item, *, inline=False):
     body = quote + ''.join(paragraph(part) for part in paragraphs)
     if not body and not inline:
         body = '<p>来源暂未提供更多内容，请查看原文。</p>'
-    value = item['published_at'] or item['observed_at']
-    date = value if len(value) == 10 else china_time(value)
-    source = original_link(item['url'], item['source'] + ' · 原文')
-    footer = f'<p class="news-meta">{source} · <time datetime="{escape(value)}">{escape(date)}</time></p>'
+    footer = f'<p class="news-meta">{article_source(item)} · {published(item)}</p>' if inline else ''
     context = []
     if item.get('reply_url'):
         context.append(f'<p>{original_link(item["reply_url"], "所回复的原帖")}</p>')
@@ -71,9 +72,10 @@ def article_content(item, *, inline=False):
         context.append(f'<p>{original_link(related["url"], label)}</p>')
     if context:
         footer += '<details><summary>补充来源</summary>' + ''.join(context) + '</details>'
+    byline = f'<footer class="news-byline">{footer}</footer>' if footer else ''
     intro = f'<p class="news-intro">{escape(lead)}</p>' if lead and lead not in paragraphs else ''
     reading = f'<div class="news-reading">{body}</div>' if body else ''
-    return f'{notice}{intro}{figure(item["id"])}{reading}<footer class="news-byline">{footer}</footer>'
+    return f'{notice}{intro}{figure(item["id"])}{reading}{byline}'
 
 
 def frame(path, body, *, sections=SECTIONS):
@@ -288,7 +290,7 @@ def detail(item, *, sections=SECTIONS, active=''):
         f'{back}<article class="editorial-document"><header class="editorial-document-head">'
         f'<p class="editorial-category">{category_label}</p>'
         f'<h1>{headline(item["title"])}</h1>{summary}'
-        f'<div class="editorial-document-meta"><span>{escape(item["source"])}</span>{published(item)}</div>'
+        f'<div class="editorial-document-meta">{article_source(item)}{published(item)}</div>'
         f'</header><div class="editorial-document-body">{article_content(item)}</div></article>'
     )
     return editorial_frame(target, body, sections, reading=True)

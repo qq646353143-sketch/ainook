@@ -1,0 +1,36 @@
+.miniature-room-art > .gallery-classic-night { display: none; }
+html[data-theme="night"] .miniature-room-art > img:first-child { visibility: hidden; }
+html[data-theme="night"] .miniature-room-art > .gallery-classic-night {
+  position: absolute;
+  inset: 0;
+  display: block;
+  filter: drop-shadow(0 18px 20px #0007);
+}
+
+.miniature-room-controls button::before, .miniature-room-controls button span { display: none; }
+.miniature-room-controls button:focus-visible,
+html[data-theme="day"] .miniature-room-controls button:focus-visible {
+  outline: 2px solid #fff3d4;
+  outline-offset: -2px;
+  box-shadow: 0 0 0 2px #203448c2;
+}
+.miniature-room-controls [data-object="lamp"] { left: 26.2%; top: 45.3%; width: max(44px, 9%); height: max(44px, 15%); border-radius: 25%; }
+.miniature-room-controls [data-object="note"] { left: 37%; top: 53.15%; width: max(44px, 10%); height: max(44px, 5%); border-radius: 23%; }
+.miniature-room-controls [data-object="computer"] { left: 56.4%; top: 45.1%; width: max(44px, 10.6%); height: max(44px, 13%); border-radius: 16%; }
+.miniature-room-controls [data-object="record"] { left: 76.4%; top: 50.6%; width: max(44px, 11.6%); height: max(44px, 7%); border-radius: 15%; }
+.miniature-room-controls [data-object="plant"] { left: 8.5%; top: 76.1%; width: max(44px, 8.2%); height: max(44px, 20%); }
+
+.miniature-room-lamp {
+  background:
+    radial-gradient(ellipse 4.4% 3.4% at var(--lamp-shade-x, 26.25%) var(--lamp-shade-y, 42%), #fff1b3ca 19%, #ffd4746d 69%, transparent 99%),
+    radial-gradient(ellipse 13% 8% at var(--lamp-desk-x, 26.25%) var(--lamp-desk-y, 52.5%), #ffba686a 19%, #ea92252b 64%, transparent 99%);
+}
+html[data-theme="day"] .miniature-room-art[data-lamp] .miniature-room-lamp { opacity: .57; }
+.miniature-room-screen { left: 52.0%; top: 40.73%; width: 6.5%; height: 7.85%; }
+.miniature-room-disc { left: 71.9%; top: 47.98%; width: 7.55%; transform: scaleY(.29); }
+.miniature-room-paper { left: 31.4%; top: 51.4%; width: 10.5%; height: 3.8%; }
+.miniature-room-drops { left: 6.3%; top: 67%; width: 4.2%; height: 10.5%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .miniature-room-art[data-watering] .miniature-room-drops i { opacity: .85; }
+}

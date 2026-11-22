@@ -1,0 +1,80 @@
+.acan-room .room-studies-intro h1 { margin-bottom: 14px; }
+.acan-room .room-studies-caption { align-self: end; padding-bottom: clamp(25px, 8vw, 128px); }
+.acan-room .room-studies-reaction { min-height: 60px; }
+
+.acan-room [data-piece="frame"] {
+  --x: 49.25%; --y: 45.5%; --w: 6%; --h: 7%;
+  transform: translate(-100%, -50%);
+}
+.acan-room [data-piece="mic"] {
+  --x: 49.25%; --y: 45.7%; --w: 4.9%; --h: 9.4%;
+  transform: translateY(-50%);
+}
+/* Keep the desktop controls below the screens and match the screen corners. */
+.acan-room :is([data-piece="left"], [data-piece="right"]) {
+  --y: 45%;
+  transform: translate(-50%, -100%);
+  border-radius: 4px;
+}
+.acan-room [data-piece="cups"] { --y: 45.9%; transform: translateX(-50%); }
+.acan-room [data-piece="song"] {
+  --x: 95.1%; --y: 45.9%; --w: 6.5%; --h: 4.8%;
+  transform: translateX(-67%);
+}
+.acan-room .duo-lamp { --y: 53.7%; --w: 15.2%; --h: 20.6%; }
+.acan-mic-glow {
+  --x: 51.8%; --y: 45.4%; --w: 2.8%; --h: 2.3%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #ffda90c7, #ffca6458 36%, transparent 70%);
+  mix-blend-mode: screen;
+}
+
+.acan-room .duo-monitor-left::before {
+  inset: 18% 14% 21%;
+  border: 0;
+  background: linear-gradient(90deg, #7ac4d880, #94d8cdbc);
+  clip-path: polygon(0 57%, 5% 44%, 9% 52%, 13% 32%, 17% 58%, 21% 39%, 25% 55%, 29% 19%, 34% 62%, 39% 37%, 44% 57%, 49% 44%, 54% 61%, 60% 25%, 65% 55%, 71% 35%, 76% 63%, 83% 42%, 89% 57%, 95% 38%, 100% 55%, 100% 73%, 94% 58%, 88% 72%, 82% 58%, 76% 80%, 71% 58%, 66% 72%, 60% 45%, 54% 76%, 48% 61%, 43% 72%, 38% 56%, 34% 86%, 29% 43%, 25% 73%, 21% 57%, 17% 78%, 13% 53%, 9% 69%, 5% 60%, 0 66%);
+}
+.acan-room .duo-monitor-left::after { inset: 79% 17% 16% 14%; background: #82d1d859; }
+.acan-room .duo-monitor-right::before, .acan-room .duo-monitor-right::after { display: none; }
+.acan-invite {
+  position: absolute;
+  inset: 34% 9% auto;
+  color: #ece7ff;
+  font-size: clamp(5px, .84vw, 12px);
+  line-height: 1.35;
+  text-align: center;
+  white-space: nowrap;
+}
+.acan-room .duo-art[data-demo] .duo-monitor-left::before { animation: acan-wave 1.15s ease-in-out infinite alternate; }
+@keyframes acan-wave { to { transform: scaleY(.58); opacity: .64; } }
+
+.duo-effects > .acan-note {
+  background: linear-gradient(150deg, #fff0d8, #e2c597);
+  border-radius: 2px;
+  box-shadow: 1px 1px 2px #33231965;
+  animation: duo-screen .22s ease both;
+}
+.acan-note::after {
+  content: "";
+  position: absolute;
+  inset: 24% 17%;
+  background: repeating-linear-gradient(0deg, #7e654a80 0 15%, transparent 15% 40%);
+}
+.duo-effects > .acan-note-frame {
+  --x: 43.95%; --y: 46.41%; --w: 2.45%; --h: 2.15%;
+  transform: translate(-50%, -50%) rotate(-9deg);
+}
+.duo-effects > .acan-note-song {
+  --x: 94.52%; --y: 49.2%; --w: 2.43%; --h: 1.64%;
+  transform: translate(-50%, -50%) rotate(8deg) skewX(-15deg);
+}
+html[data-theme="night"] .acan-note { filter: brightness(.88); }
+
+@media (max-width: 760px) {
+  .acan-room .room-studies-caption { padding-bottom: 0; }
+  .acan-room .room-studies-reaction { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .acan-room .duo-art[data-demo] .duo-monitor-left::before { animation: none; }
+}
