@@ -19,7 +19,7 @@ from urllib.request import Request, urlopen
 from ainook.quota import Quota, normalize
 from ainook.quota_watch import classify, discover
 from ainook.reset_feed import update_cache
-from ainook.reset_hourly import X_EPOCH_MS, collect
+from ainook.reset_hourly import BLUESKY_FEED, X_EPOCH_MS, collect
 from ainook.site import AllowanceSite
 from ainook.news import News, search_entries
 from ainook.news_copy import evidence_copy, reading_copy
@@ -98,6 +98,32 @@ class AllowanceDataTests(unittest.TestCase):
 
             self.assertTrue(collect(owner, output, now=now, fetch_feed=unavailable)[2])
             self.assertEqual(output.read_bytes(), saved)
+
+    def test_social_mirror_is_only_a_lead_to_a_verified_original(self):
+        now = datetime.fromisoformat('2026-11-22T23:00:00+08:00')
+        stamp = now - timedelta(minutes=20)
+        post_id = str((int(stamp.timestamp() * 1000) - X_EPOCH_MS) << 22)
+        url = f'https://x.com/AnthropicAI/status/{post_id}'
+
+        def feed(endpoint):
+            if not endpoint.startswith(BLUESKY_FEED):
+                return {'events': []}
+            if 'anthropicai.xmirror.bot' not in endpoint:
+                return {'feed': []}
+            return {'feed': [{'post': {'author': {'handle': 'anthropicai.xmirror.bot'}, 'record': {
+                'text': "We've just reset the usage limits for Claude Pro.",
+                'facets': [{'features': [{'uri': url}]}],
+            }}}]}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            owner, output = Path(tmp) / 'owner.json', Path(tmp) / 'output.json'
+            owner.write_text('{"timezone": "Asia/Shanghai", "events": []}', encoding='utf-8')
+            collect(owner, output, now=now, fetch_feed=feed, fetch_post=lambda _: 'No reset today.')
+            self.assertEqual(json.loads(output.read_bytes())['events'], [])
+            collect(owner, output, now=now, fetch_feed=feed,
+                    fetch_post=lambda _: "We'll reset the usage limits for Claude Pro.")
+            event, = json.loads(output.read_bytes())['events']
+            self.assertEqual((event['platform'], event['state'], event['url']), ('claude', 'pending', url))
 
     def test_quota_source_honors_retry_after(self):
         now = datetime.fromisoformat('2026-11-20T10:00:00+08:00')

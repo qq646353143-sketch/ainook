@@ -34,7 +34,7 @@ python3 presentation/ainook-author-gallery/serve.py \
 
 用主机的进程管理工具配置自动启动和故障重启。将域名的 HTTPS 请求转发至同机的 `127.0.0.1:7896`，并把原请求的 `Host` 传给应用。只开放反向代理的公网入口。发布前校验正式地址与 `public-origin.json` 一致。
 
-正式模式要求有效刊次。额度监测由 GitHub Actions 每小时启动一次，计划在每小时的第 41 分钟运行。任务读取 `data/reset-watch.json` 中已有的编辑记录，检查 Codex 的公开重置索引，并用公开原帖核对符合条件的新消息。有变化时更新 `AINOOK-Review/published/reset-watch-hourly.json`。Claude 和 Grok 的消息目前来自编辑记录。该任务无需 X API 密钥。
+正式模式要求有效刊次。额度监测由 GitHub Actions 每小时启动一次，计划在每小时的第 41 分钟运行。任务读取 `data/reset-watch.json` 中已有的编辑记录，检查 Codex 公开重置索引，以及 Anthropic 和 xAI 的公开发帖镜像。镜像用于找线索，只有能核对到官方原帖并明确识别预告或发放的消息才会写入 `AINOOK-Review/published/reset-watch-hourly.json`。该任务无需 X API 密钥，覆盖取决于公开索引和镜像的更新。
 
 站点在启动时从 GitHub 下载额度快照，此后每小时再下载一次。下载或校验失败时沿用上次成功的数据。预告显示黄灯，确认发放的发卡和通用重置在北京时间当天显示绿灯。已经打开的页面会通过站内接口更新显示。做隔离检查时可加 `--no-quota-scheduler`；需要验证单独的快照地址时可使用 `--reset-feed-url`。
 

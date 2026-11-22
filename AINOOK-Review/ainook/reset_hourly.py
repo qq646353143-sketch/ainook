@@ -3,13 +3,15 @@
 from argparse import ArgumentParser
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlencode, urlsplit
 
 from .quota import fetch_text, instant, json_file, utcnow, write_snapshot
 from .quota_watch import ACCOUNT_PLATFORMS, SIGNAL_WINDOW, classify
 from .reset_feed import X_STATUS, event_key, fetch_json, validate
 
 CODEX_FEED = 'https://codexresets.com/api/resets'
+BLUESKY_FEED = 'https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed'
+MIRRORS = {'anthropicai.xmirror.bot': 'claude', 'xai.xmirror.bot': 'grok'}
 LOOKBACK = timedelta(days=30)
 X_EPOCH_MS = 1288834974657
 TITLES = {
@@ -22,6 +24,10 @@ TITLES = {
 
 def key(event):
     return event['platform'], event_key(event['url'])
+
+
+def post_time(post_id):
+    return datetime.fromtimestamp(((int(post_id) >> 22) + X_EPOCH_MS) / 1000, timezone.utc)
 
 
 def codex_candidates(payload, now):
@@ -41,12 +47,38 @@ def codex_candidates(payload, now):
                 or not match or match[2] != row.get('tweet_id')
                 or ACCOUNT_PLATFORMS.get(match[1].casefold()) != 'codex'):
             continue
-        post_stamp = datetime.fromtimestamp(((int(match[2]) >> 22) + X_EPOCH_MS) / 1000, timezone.utc)
+        post_stamp = post_time(match[2])
         if abs(post_stamp - stamp) > timedelta(seconds=2):
             continue
         result = classify(match[1], row['text'])
         if result:
-            yield match[1], match[2], post_stamp, result
+            yield match[1], match[2], post_stamp, result[0]
+
+
+def mirrored_candidates(payload, mirror, now):
+    if not isinstance(payload, dict) or not isinstance(payload.get('feed'), list):
+        raise ValueError('Social mirror entries are invalid')
+    platform = MIRRORS[mirror]
+    for entry in payload['feed']:
+        post = entry.get('post') or {}
+        record = post.get('record') or {}
+        if (post.get('author', {}).get('handle') != mirror or entry.get('reason')
+                or record.get('reply') or 'reset' not in record.get('text', '').casefold()):
+            continue
+        links = [feature.get('uri') for facet in record.get('facets', [])
+                 for feature in facet.get('features', [])]
+        links.append((record.get('embed') or {}).get('external', {}).get('uri'))
+        for url in links:
+            if not isinstance(url, str):
+                continue
+            link = urlsplit(url)
+            match = X_STATUS.fullmatch(link.path)
+            if (link.scheme != 'https' or link.netloc.lower() not in ('x.com', 'twitter.com')
+                    or not match or ACCOUNT_PLATFORMS.get(match[1].casefold()) != platform):
+                continue
+            stamp = post_time(match[2])
+            if now - LOOKBACK <= stamp <= now:
+                yield match[1], match[2], stamp, platform
 
 
 def collect(owner_path, output_path, *, now=None, fetch_feed=fetch_json, fetch_post=fetch_text):
@@ -54,7 +86,8 @@ def collect(owner_path, output_path, *, now=None, fetch_feed=fetch_json, fetch_p
     owner = validate(json_file(owner_path, {}), now)
     previous = validate(json_file(output_path, {'timezone': 'Asia/Shanghai', 'events': []}), now)
     # The editorial file owns its corrections. Preserve independently verified events during outages.
-    merged = {key(event): event for event in previous['events'] if event.get('source') == 'codex-public-feed'}
+    merged = {key(event): event for event in previous['events']
+              if event.get('source') in ('codex-public-feed', 'public-x-original')}
     merged.update((key(event), event) for event in owner['events'])
     issues = []
     try:
@@ -62,8 +95,14 @@ def collect(owner_path, output_path, *, now=None, fetch_feed=fetch_json, fetch_p
     except (OSError, ValueError) as error:
         candidates = []
         issues.append(f'Codex public index: {type(error).__name__}')
-    for handle, post_id, stamp, result in candidates:
-        if ('codex', 'x:' + post_id) in merged:
+    for mirror in MIRRORS:
+        try:
+            params = urlencode({'actor': mirror, 'filter': 'posts_no_replies', 'limit': 25})
+            candidates.extend(mirrored_candidates(fetch_feed(BLUESKY_FEED + '?' + params), mirror, now))
+        except (OSError, ValueError, TypeError, AttributeError) as error:
+            issues.append(f'{mirror}: {type(error).__name__}')
+    for handle, post_id, stamp, platform in sorted(set(candidates), key=lambda candidate: candidate[2], reverse=True)[:12]:
+        if (platform, 'x:' + post_id) in merged:
             continue
         url = f'https://x.com/{handle}/status/{post_id}'
         try:
@@ -71,12 +110,13 @@ def collect(owner_path, output_path, *, now=None, fetch_feed=fetch_json, fetch_p
         except (OSError, ValueError) as error:
             issues.append(f'X post {post_id}: {type(error).__name__}')
             continue
-        if classify(handle, original) != result:
+        result = classify(handle, original)
+        if not result or result[0] != platform:
             continue
         _, kind, confirmed = result
         event = {
             'id': 'rw-auto-x-' + post_id,
-            'platform': 'codex',
+            'platform': platform,
             'kind': 'banked_reset' if kind == 'banked' else 'general_reset',
             'state': 'confirmed' if confirmed else 'pending',
             'announced_at': stamp.isoformat(),
@@ -85,7 +125,7 @@ def collect(owner_path, output_path, *, now=None, fetch_feed=fetch_json, fetch_p
             'text': TITLES[kind, confirmed],
             'url': url,
             'person': '@' + handle,
-            'source': 'codex-public-feed',
+            'source': 'public-x-original',
         }
         merged[key(event)] = event
     events = [event for event in merged.values() if instant(event['announced_at']) >= now - LOOKBACK]
@@ -102,7 +142,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     records, candidates, issues = collect(args.owner, args.output)
-    print(f'{records} reset events; {candidates} actionable Codex candidates')
+    print(f'{records} reset events; {candidates} candidates from public sources')
     for issue in issues:
         print(f'::warning::{issue}')
 

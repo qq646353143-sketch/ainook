@@ -10,7 +10,7 @@ from .quota import BEIJING, VendorRedirect, http_retry_at, instant, json_file, n
 X_SEARCH = 'https://api.x.com/2/tweets/search/recent'
 X_ACCOUNTS = {
     'OpenAI': 'codex', 'thsottiaux': 'codex',
-    'ClaudeDevs': 'claude', 'claudeai': 'claude',
+    'ClaudeDevs': 'claude', 'claudeai': 'claude', 'AnthropicAI': 'claude',
     'bot': 'grok', 'Grok': 'grok', 'xAI': 'grok',
 }
 X_QUERY = ('(' + ' OR '.join('from:' + handle for handle in X_ACCOUNTS)
