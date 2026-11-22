@@ -1,0 +1,409 @@
+{
+  "reviewed_at": "2026-11-18T13:40:00+00:00",
+  "probed_at": "2026-11-22 23:14 +08",
+  "probe_note": "探测自主机机房 IP；503/000 表示目标站对机房 IP 拦截或断开，与 Cloudflare 免费额度无关",
+  "summary": {
+    "sources": 15,
+    "reachable": 5,
+    "blocked": 10
+  },
+  "platforms": [
+    {
+      "id": "codex",
+      "name": "OpenAI",
+      "account_url": "https://chatgpt.com/codex/settings/usage",
+      "sources": [
+        {
+          "id": "openai-pricing",
+          "label": "ChatGPT Learn · 官方用量说明",
+          "level": "web",
+          "public_url": "https://learn.chatgpt.com/docs/pricing",
+          "fetch_url": "https://learn.chatgpt.com/docs/pricing",
+          "reachable_from_datacenter": false,
+          "probe": {
+            "http": 503,
+            "bytes": 91,
+            "seconds": 4.71
+          },
+          "records": [
+            {
+              "id": "codex-plan-windows",
+              "type": "cycle",
+              "title": "Plus 与标准 Business 按五小时窗口计量",
+              "evidence": [
+                "local messages per five-hour period for Plus and Standard Business",
+                "Pro plans currently have no five-hour limit.",
+                "Weekly limits may also apply."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "openai-windows",
+          "label": "OpenAI 帮助中心 · Work 与 Codex 用量",
+          "level": "web",
+          "public_url": "https://help.openai.com/en/articles/20001516-managing-usage-with-gpt-6-astra-in-work-and-codex",
+          "fetch_url": "https://help.openai.com/en/articles/20001516-managing-usage-with-gpt-6-astra-in-work-and-codex",
+          "reachable_from_datacenter": true,
+          "probe": {
+            "http": 200,
+            "bytes": 92700,
+            "seconds": 2.48
+          },
+          "records": [
+            {
+              "id": "codex-windows",
+              "type": "cycle",
+              "title": "恢复周期因方案而异",
+              "evidence": [
+                "usage limits may apply over a five-hour window and a weekly window",
+                "A new window starts when you send your first message in Work or Codex after the previous window ends."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "openai-referrals",
+          "label": "OpenAI 帮助中心 · Codex 方案与邀请",
+          "level": "web",
+          "public_url": "https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan",
+          "fetch_url": "https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan",
+          "reachable_from_datacenter": true,
+          "probe": {
+            "http": 200,
+            "bytes": 129853,
+            "seconds": 1.96
+          },
+          "records": [
+            {
+              "id": "codex-banked",
+              "type": "offer",
+              "title": "部分邀请活动可获得一次可用重置",
+              "evidence": [
+                "a successful referral can add a banked Codex rate-limit reset",
+                "expiration, and any recipient requirements that apply"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "openai-reset-guide",
+          "label": "OpenAI 帮助中心 · Codex 重置说明",
+          "level": "web",
+          "public_url": "https://help.openai.com/en/articles/20001498-how-resets-work-in-codex",
+          "fetch_url": "https://help.openai.com/en/articles/20001498-how-resets-work-in-codex",
+          "reachable_from_datacenter": true,
+          "probe": {
+            "http": 200,
+            "bytes": 74320,
+            "seconds": 1.52
+          },
+          "records": [
+            {
+              "id": "codex-reset-types",
+              "type": "policy",
+              "title": "重置卡到账后需兑换",
+              "evidence": [
+                "Receiving one does not refresh your usage",
+                "accounts and usage limits selected for an offer"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "codex-post-2120999993079451919",
+          "label": "Tibo (@thsottiaux) · X 原帖",
+          "level": "x_oembed",
+          "public_url": "https://x.com/thsottiaux/status/2120999993079451919",
+          "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/thsottiaux/status/2120999993079451919&omit_script=true",
+          "reachable_from_datacenter": false,
+          "probe": {
+            "http": 503,
+            "bytes": 91,
+            "seconds": 4.53
+          },
+          "records": [
+            {
+              "id": "codex-20261113",
+              "type": "banked",
+              "title": "Codex 重置卡已激活，预计陆续到账",
+              "evidence": [
+                "the banked reset has been activated",
+                "accounts sometime soon"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "codex-post-2117035794678546764",
+          "label": "Tibo (@thsottiaux) · X 原帖",
+          "level": "x_oembed",
+          "public_url": "https://x.com/thsottiaux/status/2117035794678546764",
+          "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/thsottiaux/status/2117035794678546764&omit_script=true",
+          "reachable_from_datacenter": false,
+          "probe": {
+            "http": 503,
+            "bytes": 91,
+            "seconds": 4.27
+          },
+          "records": [
+            {
+              "id": "codex-20261102",
+              "type": "banked",
+              "title": "第 28 天公布第二次重置卡",
+              "evidence": [
+                "Day 28/ Banked 2/2"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "codex-post-2116692529970311254",
+          "label": "Tibo (@thsottiaux) · X 原帖",
+          "level": "x_oembed",
+          "public_url": "https://x.com/thsottiaux/status/2116692529970311254",
+          "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/thsottiaux/status/2116692529970311254&omit_script=true",
+          "reachable_from_datacenter": false,
+          "probe": {
+            "http": 503,
+            "bytes": 91,
+            "seconds": 4.27
+          },
+          "records": [
+            {
+              "id": "codex-20261101",
+              "type": "banked",
+              "title": "公布两次重置卡安排中的第一次",
+              "evidence": [
+                "Banked 1/2"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "codex-post-2115273064481218829",
+          "label": "Tibo (@thsottiaux) · X 原帖",
+          "level": "x_oembed",
+          "public_url": "https://x.com/thsottiaux/status/2115273064481218829",
+          "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/thsottiaux/status/2115273064481218829&omit_script=true",
+          "reachable_from_datacenter": false,
+          "probe": {
+            "http": 503,
+            "bytes": 91,
+            "seconds": 4.33
+          },
+          "records": [
+            {
+              "id": "codex-20261028",
+              "type": "reset",
+              "title": "第 23 天宣布当天安排重置",
+              "evidence": [
+                "Day 23/",
+                "today is a reset"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "claude",
+      "name": "Claude",
+      "account_url": "https://claude.ai/settings/usage",
+      "sources": [
+        {
+          "id": "claude-windows",
+          "label": "Claude 帮助中心 · 用量限制",
+          "level": "web",
+          "public_url": "https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work",
+          "fetch_url": "https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work",
+          "reachable_from_datacenter": true,
+          "probe": {
+            "http": 200,
+            "bytes": 230092,
+            "seconds": 2.22
+          },
+          "records": [
+            {
+              "id": "claude-windows",
+              "type": "cycle",
+              "title": "五小时会话与每周限额",
+              "evidence": [
+                "The period starts when you send your first message, and your limit resets in full five hours later.",
+                "Verified Ultra accounts don't have a five-hour limit",
+                "at a fixed time each week"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "claude-fable-52",
+          "label": "Claude 帮助中心 · Fable 5.2 发布权益",
+          "level": "web",
+          "public_url": "https://support.claude.com/en/articles/17506494-claude-fable-5-2-launch-offers",
+          "fetch_url": "https://support.claude.com/en/articles/17506494-claude-fable-5-2-launch-offers",
+          "reachable_from_datacenter": true,
+          "probe": {
+            "http": 200,
+            "bytes": 227457,
+            "seconds": 5.31
+          },
+          "records": [
+            {
+              "id": "claude-fable-pro",
+              "type": "offer",
+              "title": "Fable 一周试用与一次重置",
+              "evidence": [
+                "launches on November 9, 2026",
+                "reset expires on November 16, 2026 at 11:59 pm PT"
+              ]
+            },
+            {
+              "id": "claude-fable-paid",
+              "type": "offer",
+              "title": "Fable 发布活动提供 1–3 次重置",
+              "evidence": [
+                "One to three Fable limit resets",
+                "March 8, 2027 at 11:59 pm PT"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "claude-post-2120275296637321476",
+          "label": "ClaudeDevs · X 原帖",
+          "level": "x_oembed",
+          "public_url": "https://x.com/ClaudeDevs/status/2120275296637321476",
+          "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/ClaudeDevs/status/2120275296637321476&omit_script=true",
+          "reachable_from_datacenter": false,
+          "probe": {
+            "http": 503,
+            "bytes": 91,
+            "seconds": 4.17
+          },
+          "records": [
+            {
+              "id": "claude-20261111",
+              "type": "banked",
+              "title": "四类付费方案获一次完整重置",
+              "evidence": [
+                "all Pro, Max, Ultra, and Team users one free full reset",
+                "December 10 at 2:00PM PT"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "claude-post-2102435538120691886",
+          "label": "Claude (@claudeai) · X 原帖",
+          "level": "x_oembed",
+          "public_url": "https://x.com/claudeai/status/2102435538120691886",
+          "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/claudeai/status/2102435538120691886&omit_script=true",
+          "reachable_from_datacenter": false,
+          "probe": {
+            "http": 0,
+            "bytes": 0,
+            "seconds": 4.82
+          },
+          "records": [
+            {
+              "id": "claude-20260923",
+              "type": "banked",
+              "title": "Claude 宣布一张可留待使用的重置卡",
+              "evidence": [
+                "providing subscription users a rate limit reset",
+                "save and use whenever you choose"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grok",
+      "name": "Grok",
+      "account_url": "https://grok.com/",
+      "sources": [
+        {
+          "id": "grok-usage",
+          "label": "xAI 官方文档 · Grok 常见问题",
+          "level": "web",
+          "public_url": "https://docs.x.ai/grok/faq",
+          "fetch_url": "https://docs.x.ai/grok/faq",
+          "reachable_from_datacenter": false,
+          "probe": {
+            "http": 503,
+            "bytes": 91,
+            "seconds": 4.36
+          },
+          "records": [
+            {
+              "id": "grok-weekly",
+              "type": "cycle",
+              "title": "适用方案共享周额度",
+              "evidence": [
+                "The usage pool limit resets every week on a schedule shown in the Usage tab in Settings.",
+                "these are separate from your weekly usage limit and resets on their own schedule"
+              ]
+            },
+            {
+              "id": "grok-shared-policy",
+              "type": "policy",
+              "title": "付费额度从分产品日限额转为共享周额度",
+              "evidence": [
+                "Rolling out in June 2026",
+                "Previously, each Grok product had its own daily limits"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "grok-post-2119871982946971659",
+          "label": "Grok Bot (@bot) · X 原帖",
+          "level": "x_oembed",
+          "public_url": "https://x.com/bot/status/2119871982946971659",
+          "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/bot/status/2119871982946971659&omit_script=true",
+          "reachable_from_datacenter": false,
+          "probe": {
+            "http": 0,
+            "bytes": 0,
+            "seconds": 4.78
+          },
+          "records": [
+            {
+              "id": "grok-20261110",
+              "type": "reset",
+              "title": "Grok Bot 宣布已恢复周额度",
+              "evidence": [
+                "reset weekly limits for all Grok Bot users"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "grok-post-2106083136002310193",
+          "label": "Grok Bot (@bot) · X 原帖",
+          "level": "x_oembed",
+          "public_url": "https://x.com/bot/status/2106083136002310193",
+          "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/bot/status/2106083136002310193&omit_script=true",
+          "reachable_from_datacenter": false,
+          "probe": {
+            "http": 503,
+            "bytes": 91,
+            "seconds": 4.3
+          },
+          "records": [
+            {
+              "id": "grok-20261003",
+              "type": "reset",
+              "title": "Grok Bot 宣布一次用量重置",
+              "evidence": [
+                "reset usage limits for all Grok Bot users"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
