@@ -159,6 +159,7 @@ class Quota:
         self.platforms = self.catalog['platforms']
         self.data_path = Path(data_path)
         self.discovery_path = self.data_path.with_name('quota-discovery.json')
+        self.reset_feed_path = self.data_path.with_name('reset-watch-hourly.json')
 
     def sync(self, fetch=fetch_text, *, now=None):
         now = now or utcnow()
@@ -194,9 +195,17 @@ class Quota:
                 for key, row in state.items()}
 
     def overview(self, *, now=None):
+        from .reset_feed import event_key, records
+
         now = now or utcnow()
         cache = json_file(self.data_path, {})
         discovered = json_file(self.discovery_path, {}).get('records', {})
+        try:
+            hourly = list(records(json_file(self.reset_feed_path, {
+                'timezone': 'Asia/Shanghai', 'events': [],
+            }), now))
+        except ValueError:
+            hourly = []
         result = []
         for platform in self.platforms:
             item = {key: platform[key] for key in ('id', 'name', 'owner', 'logo', 'account_url', 'account_hint')}
@@ -231,8 +240,12 @@ class Quota:
                     public.update(source=source['label'], url=source['url'], verified_at=last_verified,
                                   checked_at=state.get('checked_at'), status=status)
                     item['records'].append(public)
-            known_urls = {record['url'].casefold() for record in item['records']}
+            current = {event_key(record['url']): record for record in hourly if record['platform'] == item['id']}
+            item['records'] = [record for record in item['records']
+                               if record['type'] not in ('banked', 'reset') or event_key(record['url']) not in current]
+            known_urls = {event_key(record['url']) for record in item['records']} | current.keys()
             item['records'].extend(record for record in discovered.values()
-                                   if record['platform'] == item['id'] and record['url'].casefold() not in known_urls)
+                                   if record['platform'] == item['id'] and event_key(record['url']) not in known_urls)
+            item['records'].extend(current.values())
             result.append(item)
         return result

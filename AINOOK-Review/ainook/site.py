@@ -18,6 +18,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from .quota import CHECK_INTERVAL, Quota, json_file
 from .quota_watch import discover
+from .reset_feed import INTERVAL as RESET_FEED_INTERVAL, PUBLISHED_URL, update_cache
 from .news import News
 from .news_edition import EDITION_FILE, EDITIONS, LEGACY_SECTIONS, NewsEdition
 from . import news_views
@@ -131,6 +132,20 @@ class AllowanceSite:
                 self.stop_event.wait(next_check - now)
         threading.Thread(target=work, name='ainook-quota-check', daemon=True).start()
 
+    def start_reset_feed(self, url):
+        def work():
+            next_check = time.monotonic()
+            while not self.stop_event.is_set():
+                try:
+                    update_cache(self.quota.reset_feed_path, url)
+                    print('AINOOK 小时额度快照已检查', flush=True)
+                except (OSError, ValueError) as error:
+                    print(f'AINOOK 小时额度快照读取失败：{type(error).__name__}，保留上次数据', flush=True)
+                next_check += RESET_FEED_INTERVAL
+                self.stop_event.wait(max(0, next_check - time.monotonic()))
+
+        threading.Thread(target=work, name='ainook-reset-feed', daemon=True).start()
+
     def start_news(self):
         if not isinstance(self.news, News):
             return
@@ -161,7 +176,7 @@ class LocalHTTPServer(ThreadingHTTPServer):
 
 
 def serve(port=7880, *, bind='127.0.0.1', scheduler=True, quota_scheduler=True, data_dir=DEFAULT_DATA,
-          wish_path=DEFAULT_WISHES, origin_file=DEFAULT_ORIGIN, versioned_assets=None):
+          wish_path=DEFAULT_WISHES, origin_file=DEFAULT_ORIGIN, versioned_assets=None, reset_feed_url=None):
     app = AllowanceSite(data_dir, wish_path, origin_file)
     versioned_assets = versioned_assets or {}
     if not ipaddress.ip_address(bind).is_loopback and not https_origin(app.config()):
@@ -377,9 +392,11 @@ def serve(port=7880, *, bind='127.0.0.1', scheduler=True, quota_scheduler=True, 
                 self.respond(503, {'error': '服务暂时不可用，请稍后重试'})
 
     server = LocalHTTPServer((bind, port), Handler)
+    if reset_feed_url:
+        app.start_reset_feed(reset_feed_url)
+    elif scheduler and quota_scheduler:
+        app.start_checks()
     if scheduler:
-        if quota_scheduler:
-            app.start_checks()
         app.start_news()
     print(f'AINOOK 监听 http://{bind}:{port}/', flush=True)
     try:
@@ -397,9 +414,11 @@ if __name__ == '__main__':
     parser.add_argument('--bind', choices=('127.0.0.1', '0.0.0.0'), default='127.0.0.1')
     parser.add_argument('--no-scheduler', action='store_true')
     parser.add_argument('--no-quota-scheduler', action='store_true', help='并行预览时复用额度快照，避免重复检查')
+    parser.add_argument('--reset-feed-url', default=PUBLISHED_URL, help='GitHub 小时额度快照地址')
     parser.add_argument('--data-dir', type=Path, default=DEFAULT_DATA)
     parser.add_argument('--wish-db', type=Path, default=DEFAULT_WISHES)
     parser.add_argument('--origin-file', type=Path, default=DEFAULT_ORIGIN)
     args = parser.parse_args()
     serve(args.port, scheduler=not args.no_scheduler, quota_scheduler=not args.no_quota_scheduler, bind=args.bind, data_dir=args.data_dir,
-          wish_path=args.wish_db, origin_file=args.origin_file)
+          wish_path=args.wish_db, origin_file=args.origin_file,
+          reset_feed_url=None if args.no_scheduler or args.no_quota_scheduler else args.reset_feed_url)

@@ -1,0 +1,37 @@
+name: AINOOK hourly reset watch
+
+on:
+  schedule:
+    - cron: '41 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ainook-reset-watch.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ainook-hourly-reset-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Check public reset sources and publish changes
+        run: |
+          cd AINOOK-Review
+          python3 -m ainook.reset_hourly --owner ../data/reset-watch.json --output published/reset-watch-hourly.json
+          git add -- published/reset-watch-hourly.json
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -m '本次改动：更新额度重置快照'
+          git push origin HEAD:main || { git pull --rebase origin main && git push origin HEAD:main; }

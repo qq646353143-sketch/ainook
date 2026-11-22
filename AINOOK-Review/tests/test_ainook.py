@@ -18,6 +18,8 @@ from urllib.request import Request, urlopen
 
 from ainook.quota import Quota, normalize
 from ainook.quota_watch import classify, discover
+from ainook.reset_feed import update_cache
+from ainook.reset_hourly import X_EPOCH_MS, collect
 from ainook.site import AllowanceSite
 from ainook.news import News, search_entries
 from ainook.news_copy import evidence_copy, reading_copy
@@ -47,6 +49,56 @@ class EditionSyncTests(unittest.TestCase):
 
 
 class AllowanceDataTests(unittest.TestCase):
+    def test_hourly_snapshot_changes_lights_on_the_event_day_and_ignores_bad_update(self):
+        now = datetime.fromisoformat('2026-11-22T23:00:00+08:00')
+        stamp = now - timedelta(minutes=20)
+        seed = {'timezone': 'Asia/Shanghai', 'events': [{
+            'id': 'confirmed', 'platform': 'codex', 'kind': 'banked_reset', 'state': 'confirmed',
+            'announced_at': stamp.isoformat(), 'confirmed_at': stamp.isoformat(),
+            'text': '已发放重置卡', 'url': 'https://x.com/OpenAI/status/501',
+        }, {
+            'id': 'announced', 'platform': 'claude', 'kind': 'general_reset', 'state': 'pending',
+            'announced_at': stamp.isoformat(), 'text': '通用重置预告',
+            'url': 'https://x.com/ClaudeDevs/status/502',
+        }]}
+        with tempfile.TemporaryDirectory() as tmp:
+            quota = Quota(Path(tmp) / 'verified.json')
+            path = quota.reset_feed_path
+            update_cache(path, 'https://example.org', fetch=lambda _: seed, now=now)
+            with self.assertRaises(ValueError):
+                update_cache(path, 'https://example.org', fetch=lambda _: {'events': []}, now=now)
+            cards = {row['id']: card_events(row['records'], now=now) for row in quota.overview(now=now)}
+            self.assertEqual(cards['codex']['issued_day'], '2026-11-22')
+            self.assertIsNone(cards['claude']['issued_day'])
+            self.assertIsNotNone(cards['claude']['signal_until'])
+            self.assertIsNone(cards['grok']['signal_until'])
+            later = now + timedelta(days=3)
+            cards = {row['id']: card_events(row['records'], now=later) for row in quota.overview(now=later)}
+            self.assertNotEqual(cards['codex']['issued_day'], later.date().isoformat())
+            self.assertIsNone(cards['claude']['signal_until'])
+
+    def test_hourly_collector_requires_matching_original_and_keeps_verified_events(self):
+        now = datetime.fromisoformat('2026-11-22T23:00:00+08:00')
+        stamp = now - timedelta(minutes=20)
+        post_id = str((int(stamp.timestamp() * 1000) - X_EPOCH_MS) << 22)
+        text = "We've just issued a banked reset for Codex."
+        payload = {'events': [{'tweet_id': post_id, 'tweet_url': f'https://x.com/OpenAI/status/{post_id}',
+                               'announced_at': stamp.isoformat(), 'text': text}]}
+        with tempfile.TemporaryDirectory() as tmp:
+            owner, output = Path(tmp) / 'owner.json', Path(tmp) / 'output.json'
+            owner.write_text('{"timezone": "Asia/Shanghai", "events": []}', encoding='utf-8')
+            collect(owner, output, now=now, fetch_feed=lambda _: payload, fetch_post=lambda _: 'Done')
+            self.assertEqual(json.loads(output.read_text(encoding='utf-8'))['events'], [])
+            collect(owner, output, now=now, fetch_feed=lambda _: payload, fetch_post=lambda _: text)
+            saved = output.read_bytes()
+            self.assertEqual(json.loads(saved)['events'][0]['state'], 'confirmed')
+
+            def unavailable(_):
+                raise TimeoutError()
+
+            self.assertTrue(collect(owner, output, now=now, fetch_feed=unavailable)[2])
+            self.assertEqual(output.read_bytes(), saved)
+
     def test_quota_source_honors_retry_after(self):
         now = datetime.fromisoformat('2026-11-20T10:00:00+08:00')
         headers = Message()

@@ -218,6 +218,7 @@ def main():
     parser.add_argument('--origin-file', type=Path)
     parser.add_argument('--production', action='store_true')
     parser.add_argument('--no-quota-scheduler', action='store_true')
+    parser.add_argument('--reset-feed-url', default=site.PUBLISHED_URL)
     parser.add_argument('--trial-dir', type=Path, help='Use a separate origin configuration and visitor counter for a public test.')
     args = parser.parse_args()
     if args.production:
@@ -265,7 +266,9 @@ def main():
         origin = args.origin_file or GALLERY / 'local-origin.json'
     site.serve(port=args.port, bind=args.bind, scheduler=args.production,
                quota_scheduler=not args.no_quota_scheduler, data_dir=args.data_dir, wish_path=counter,
-               origin_file=origin, versioned_assets=gallery.assets)
+               origin_file=origin, versioned_assets=gallery.assets,
+               reset_feed_url=None if args.no_quota_scheduler or not (args.production or args.trial_dir)
+               else args.reset_feed_url)
 
 
 if __name__ == '__main__':
