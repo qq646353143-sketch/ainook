@@ -1,0 +1,25 @@
+{
+  "name": "ainook",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-11-22",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "run_worker_first": ["/*", "!/assets/*"]
+  },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "ainook-site",
+    "database_id": "5215d866-acef-4099-a11e-183767c9c8f9"
+  }],
+  "ratelimits": [{
+    "name": "WISH_LIMIT",
+    "namespace_id": "11025",
+    "simple": {"limit": 120, "period": 60}
+  }],
+  "triggers": {"crons": ["57 * * * *"]},
+  "observability": {"enabled": true}
+}

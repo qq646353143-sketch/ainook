@@ -1,6 +1,16 @@
 # AINOOK 正式部署
 
-正式入口为 `presentation/ainook-author-gallery/serve.py`，包含额度追踪、前沿资讯、作者小屋和朋友房间。用 Python 3.11 或更新版本启动。服务器需要系统时区数据和出站 HTTPS。站点可以在 Linux 主机上常驻，由反向代理处理公网 HTTPS。
+Cloudflare 部署位于 `cloud/`。Python 常驻入口为 `presentation/ainook-author-gallery/serve.py`。两个入口共用现有页面、资讯与小屋素材。
+
+## Cloudflare
+
+使用 `python3 AINOOK-Review/cloud/build.py` 将现有页面和公开素材打包为静态资源。Cloudflare Worker 处理搜索和筛选、额度卡片及点击计数，D1 用来保存点击数和最后一次校验通过的额度快照。数据库结构见 `cloud/schema.sql`。现有本地 SQLite 文件、运行日志和工具凭据不属于部署资源。
+
+从 `AINOOK-Review/cloud` 目录部署时先运行 `python3 build.py`，再运行 `npx wrangler deploy`。GitHub 自动构建使用相同的根目录和命令。Cloudflare 按每小时第 57 分钟从 GitHub 取额度快照。每日资讯任务在北京时间 08:45 校验和更新 `AINOOK-Review/published/reader-cloud.json`，随后由 Cloudflare 构建并发布。验证未通过时保留原来的数据。
+
+## Python 常驻部署
+
+用 Python 3.11 或更新版本启动。服务器需要系统时区数据和出站 HTTPS。站点可以在 Linux 主机上常驻，由反向代理处理公网 HTTPS。
 
 ## 持久目录
 
