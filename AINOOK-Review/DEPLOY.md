@@ -8,6 +8,10 @@ Cloudflare 部署位于 `cloud/`。Python 常驻入口为 `presentation/ainook-a
 
 从 `AINOOK-Review/cloud` 目录部署时先运行 `python3 build.py`，再运行 `npx wrangler deploy`。GitHub 自动构建使用相同的根目录和命令。Cloudflare 按每小时第 57 分钟从 GitHub 取额度快照。每日资讯任务在北京时间 08:45 校验和更新 `AINOOK-Review/published/reader-cloud.json`，随后由 Cloudflare 构建并发布。验证未通过时保留原来的数据。
 
+在 Cloudflare 的「设置 → 构建」中，生产分支填 `main`，根目录填 `AINOOK-Review/cloud`，构建命令和部署命令使用上面的两条命令。「禁用构建」保持关闭，部署使用 Cloudflare 生成的构建令牌。连接后，下一次向 `main` 推送提交时会开始构建。在「部署」中核对构建结果和提交版本，再到公网首页检查。
+
+运行时的 `DB` 绑定使用 `ainook-site` 保存点击计数和额度快照，`WISH_LIMIT` 限制过于频繁的点击请求。当前无需额外的运行时变量、构建密钥、部署挂钩、消息队列或邮件触发器。每天 08:45 的资讯任务由 GitHub Actions 触发，设置里的每小时第 57 分钟触发器负责读取额度快照。
+
 ## Python 常驻部署
 
 用 Python 3.11 或更新版本启动。服务器需要系统时区数据和出站 HTTPS。站点可以在 Linux 主机上常驻，由反向代理处理公网 HTTPS。
