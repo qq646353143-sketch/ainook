@@ -4,8 +4,9 @@
   "probe_note": "探测自主机机房 IP；503/000 表示目标站对机房 IP 拦截或断开，与 Cloudflare 免费额度无关",
   "summary": {
     "sources": 15,
-    "reachable": 5,
-    "blocked": 10
+    "reachable_direct": 5,
+    "reachable_via_meta_source": 4,
+    "unreachable": 6
   },
   "platforms": [
     {
@@ -116,7 +117,7 @@
           "level": "x_oembed",
           "public_url": "https://x.com/thsottiaux/status/2120999993079451919",
           "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/thsottiaux/status/2120999993079451919&omit_script=true",
-          "reachable_from_datacenter": false,
+          "reachable_from_datacenter": true,
           "probe": {
             "http": 503,
             "bytes": 91,
@@ -132,7 +133,14 @@
                 "accounts sometime soon"
               ]
             }
-          ]
+          ],
+          "fetch_strategy": "via_meta_source",
+          "meta_source": "codex-resets-api",
+          "match_by": [
+            "tweet_id",
+            "source_tweet_ids"
+          ],
+          "note": "按 tweet_id 在 meta_source 的 events / source_tweet_ids 中定位；不要用 evidence 短语硬匹配，部分事件正文被合并后只剩最后一条"
         },
         {
           "id": "codex-post-2117035794678546764",
@@ -140,7 +148,7 @@
           "level": "x_oembed",
           "public_url": "https://x.com/thsottiaux/status/2117035794678546764",
           "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/thsottiaux/status/2117035794678546764&omit_script=true",
-          "reachable_from_datacenter": false,
+          "reachable_from_datacenter": true,
           "probe": {
             "http": 503,
             "bytes": 91,
@@ -155,7 +163,14 @@
                 "Day 28/ Banked 2/2"
               ]
             }
-          ]
+          ],
+          "fetch_strategy": "via_meta_source",
+          "meta_source": "codex-resets-api",
+          "match_by": [
+            "tweet_id",
+            "source_tweet_ids"
+          ],
+          "note": "按 tweet_id 在 meta_source 的 events / source_tweet_ids 中定位；不要用 evidence 短语硬匹配，部分事件正文被合并后只剩最后一条"
         },
         {
           "id": "codex-post-2116692529970311254",
@@ -163,7 +178,7 @@
           "level": "x_oembed",
           "public_url": "https://x.com/thsottiaux/status/2116692529970311254",
           "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/thsottiaux/status/2116692529970311254&omit_script=true",
-          "reachable_from_datacenter": false,
+          "reachable_from_datacenter": true,
           "probe": {
             "http": 503,
             "bytes": 91,
@@ -178,7 +193,14 @@
                 "Banked 1/2"
               ]
             }
-          ]
+          ],
+          "fetch_strategy": "via_meta_source",
+          "meta_source": "codex-resets-api",
+          "match_by": [
+            "tweet_id",
+            "source_tweet_ids"
+          ],
+          "note": "按 tweet_id 在 meta_source 的 events / source_tweet_ids 中定位；不要用 evidence 短语硬匹配，部分事件正文被合并后只剩最后一条"
         },
         {
           "id": "codex-post-2115273064481218829",
@@ -186,7 +208,7 @@
           "level": "x_oembed",
           "public_url": "https://x.com/thsottiaux/status/2115273064481218829",
           "fetch_url": "https://publish.twitter.com/oembed?url=https://x.com/thsottiaux/status/2115273064481218829&omit_script=true",
-          "reachable_from_datacenter": false,
+          "reachable_from_datacenter": true,
           "probe": {
             "http": 503,
             "bytes": 91,
@@ -202,7 +224,14 @@
                 "today is a reset"
               ]
             }
-          ]
+          ],
+          "fetch_strategy": "via_meta_source",
+          "meta_source": "codex-resets-api",
+          "match_by": [
+            "tweet_id",
+            "source_tweet_ids"
+          ],
+          "note": "按 tweet_id 在 meta_source 的 events / source_tweet_ids 中定位；不要用 evidence 短语硬匹配，部分事件正文被合并后只剩最后一条"
         }
       ]
     },
@@ -291,7 +320,9 @@
                 "December 10 at 2:00PM PT"
               ]
             }
-          ]
+          ],
+          "fetch_strategy": "none",
+          "note": "云端暂无可用源：x.com 与 oembed 均被拦，Codex Resets 只覆盖 OpenAI 账号；建议人工确认或另接官方接口"
         },
         {
           "id": "claude-post-2102435538120691886",
@@ -315,7 +346,9 @@
                 "save and use whenever you choose"
               ]
             }
-          ]
+          ],
+          "fetch_strategy": "none",
+          "note": "云端暂无可用源：x.com 与 oembed 均被拦，Codex Resets 只覆盖 OpenAI 账号；建议人工确认或另接官方接口"
         }
       ]
     },
@@ -378,7 +411,9 @@
                 "reset weekly limits for all Grok Bot users"
               ]
             }
-          ]
+          ],
+          "fetch_strategy": "none",
+          "note": "云端暂无可用源：x.com 与 oembed 均被拦，Codex Resets 只覆盖 OpenAI 账号；建议人工确认或另接官方接口"
         },
         {
           "id": "grok-post-2106083136002310193",
@@ -401,9 +436,43 @@
                 "reset usage limits for all Grok Bot users"
               ]
             }
-          ]
+          ],
+          "fetch_strategy": "none",
+          "note": "云端暂无可用源：x.com 与 oembed 均被拦，Codex Resets 只覆盖 OpenAI 账号；建议人工确认或另接官方接口"
         }
       ]
+    }
+  ],
+  "meta_sources": [
+    {
+      "id": "codex-resets-api",
+      "name": "Codex Resets（@wong2 维护的第三方追踪站）",
+      "url": "https://codexresets.com/api/resets",
+      "format": "json",
+      "auth": "none",
+      "notes": [
+        "免费公开、无需密钥；返回 events（历史公告）、vote_events、stats、generated_at",
+        "每条 event 带 tweet_id、tweet_url、text、announced_at、reset_type、event_status、completion_source、completed_at、source_tweet_ids",
+        "非官方数据，分类由自动机器人完成；只适合判定「公告是否已发布、属于哪类」，不可当官方承诺",
+        "抓取需带浏览器 UA，否则可能返回 503；实测 4 次调用 3 次成功、1 次 20 秒超时，必须重试并保留上次结果",
+        "已覆盖 4 条 OpenAI/Codex 的 X 帖；不覆盖 Claude 与 Grok 的 X 帖"
+      ],
+      "probe": {
+        "http": 200,
+        "bytes": 58195,
+        "attempts": 4,
+        "success": 3,
+        "timeout": 1,
+        "needs_browser_ua": true
+      },
+      "stats_snapshot": {
+        "total": 74,
+        "last_reset_at": "2026-11-12T21:59:39Z",
+        "days_since_last": 9.7,
+        "avg_interval_days": 5.8,
+        "longest_drought_days": 67.7,
+        "generated_at": "2026-11-22T15:30:02Z"
+      }
     }
   ]
 }
