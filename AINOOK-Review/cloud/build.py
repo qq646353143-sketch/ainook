@@ -13,10 +13,11 @@ ROOT = HERE.parent
 sys.path.insert(0, str(ROOT))
 
 from ainook import site, views
-from ainook.news_edition import EDITIONS, LEGACY_SECTIONS, NewsEdition
+from ainook.news_edition import EDITIONS, LEGACY_SECTIONS
+from sync_edition import SOURCE, build_editions, load_edition
 
 
-def build(edition_path, reset_path, assets, generated):
+def build(edition, reset_path, assets, generated, *, upcoming=None, release=None):
     files = run_path(str(ROOT / 'presentation/ainook-author-gallery/serve.py'))
     editorial = files['editorial']
     gallery = files['RoomGallery']()
@@ -35,6 +36,33 @@ def build(edition_path, reset_path, assets, generated):
 
     def write_json(path, data):
         path.write_text(json.dumps(data, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+
+    def render_edition(issue, directory=''):
+        updated = issue.updated.isoformat()
+        sources = list(issue.sources.values())
+        for route, title in EDITIONS.items():
+            filters = dict(query='', source='', days='all', offset=0)
+            items, total = issue.articles(mode=route.lstrip('/'), **filters)
+            body = editorial.list_page(route, items, total, sources, sections=EDITIONS, edition_at=updated, **filters)
+            html(directory + route.removeprefix('/'), views.page(route, {'title': title, 'news_html': body}, origin))
+        (internal / directory / 'article').mkdir(parents=True, exist_ok=True)
+        index = []
+        for item in issue.ordered:
+            route = 'article/' + item['id']
+            path = directory + route
+            body = editorial.detail(item, sections=EDITIONS, active='/' + item['section'])
+            html(path, views.page('/' + route, {'title': item['title'], 'news_html': body}, origin))
+            inline = editorial.article_content(item, inline=True)
+            (internal / (path + '-inline.html')).write_text(inline, encoding='utf-8')
+            write_json(internal / (path + '.json'), item)
+            search = ' '.join((item['title'], item['summary'], item['source'], *item['body'])).casefold()
+            index.append({key: item[key] for key in ('id', 'section', 'source', 'published_at')} |
+                         {'search': search, 'row': editorial.article_row(item, EDITIONS)})
+        body = editorial.source_page(sections=EDITIONS)
+        html(directory + 'news/sources', views.page('/news/sources',
+             {'title': editorial.PAGES['/news/sources'], 'news_html': body}, origin))
+        write_json(internal / directory / 'news-index.json', {'updated': updated, 'sources': sources, 'items': index})
+        print(f'AINOOK news edition: {updated}, {len(index)} items')
 
     original = views.static
     views.static = lambda name: (files['file_text'](files['NEWS'] / 'editorial.css')
@@ -62,37 +90,17 @@ def build(edition_path, reset_path, assets, generated):
             if gallery.acan_original:
                 html('author/friend-acan-original' + suffix, gallery.render(
                     '/author', {}, origin, {**options, 'friend': ['acan'], 'scene': ['original']}))
-        edition = NewsEdition(edition_path)
-        updated = edition.updated.isoformat()
-        sources = list(edition.sources.values())
-        for route, title in EDITIONS.items():
-            filters = dict(query='', source='', days='all', offset=0)
-            items, total = edition.articles(mode=route.lstrip('/'), **filters)
-            body = editorial.list_page(route, items, total, sources, sections=EDITIONS, edition_at=updated, **filters)
-            html(route.removeprefix('/'), views.page(route, {'title': title, 'news_html': body}, origin))
-        article_files = internal / 'article'
-        article_files.mkdir(exist_ok=True)
-        index = []
-        for item in edition.ordered:
-            path = 'article/' + item['id']
-            body = editorial.detail(item, sections=EDITIONS, active='/' + item['section'])
-            html(path, views.page('/' + path, {'title': item['title'], 'news_html': body}, origin))
-            inline = editorial.article_content(item, inline=True)
-            (internal / (path + '-inline.html')).write_text(inline, encoding='utf-8')
-            write_json(internal / (path + '.json'), item)
-            search = ' '.join((item['title'], item['summary'], item['source'], *item['body'])).casefold()
-            index.append({key: item[key] for key in ('id', 'section', 'source', 'published_at')} |
-                         {'search': search, 'row': editorial.article_row(item, EDITIONS)})
-        body = editorial.source_page(sections=EDITIONS)
-        html('news/sources', views.page('/news/sources',
-             {'title': editorial.PAGES['/news/sources'], 'news_html': body}, origin))
+        render_edition(edition)
+        if upcoming:
+            render_edition(upcoming, 'scheduled-edition/')
+            print(f'AINOOK scheduled news release: {release.isoformat()}')
     finally:
         views.static = original
-    write_json(internal / 'news-index.json', {'updated': updated, 'sources': sources, 'items': index})
     copyfile(reset_path, internal / 'resets.json')
     write_json(internal / 'initial-cards.json', cards)
     write_json(generated / 'routes.json', {'policies': policies, 'news': list(EDITIONS), 'legacy': LEGACY_SECTIONS,
-                                         'rooms': list(gallery.scenes), 'friends': list(gallery.friend_scenes)})
+                                         'rooms': list(gallery.scenes), 'friends': list(gallery.friend_scenes),
+                                         'newsReleaseAt': int(release.timestamp() * 1000) if release else None})
 
     target = assets / 'assets'
     target.mkdir(exist_ok=True)
@@ -103,14 +111,16 @@ def build(edition_path, reset_path, assets, generated):
     (assets / '_headers').write_text(
         '/assets/room-*.webp\n  Cache-Control: public, max-age=31536000, immutable\n'
         '/assets/*\n  X-Content-Type-Options: nosniff\n', encoding='utf-8')
-    print(f'AINOOK build: {len(index)} news items, {len(policies)} pages, {len(gallery.assets)} room images.')
+    print(f'AINOOK build: {len(policies)} pages, {len(gallery.assets)} room images.')
 
 
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument('--edition', type=Path, default=ROOT / 'published/reader-cloud.json')
+    parser.add_argument('--source', type=Path, default=SOURCE, help='Content file from the build checkout.')
+    parser.add_argument('--edition', type=Path, help='Render this single edition explicitly for an isolated build.')
     parser.add_argument('--resets', type=Path, default=ROOT / 'published/reset-watch-hourly.json')
     parser.add_argument('--assets', type=Path, default=HERE / 'public')
     parser.add_argument('--generated', type=Path, default=HERE / 'generated')
     args = parser.parse_args()
-    build(args.edition, args.resets, args.assets, args.generated)
+    edition, upcoming, release = (load_edition(args.edition)[0], None, None) if args.edition else build_editions(args.source)
+    build(edition, args.resets, args.assets, args.generated, upcoming=upcoming, release=release)

@@ -6,11 +6,13 @@ Cloudflare 部署位于 `cloud/`。Python 常驻入口为 `presentation/ainook-a
 
 使用 `python3 AINOOK-Review/cloud/build.py` 将现有页面和公开素材打包为静态资源。Cloudflare Worker 处理搜索和筛选、额度卡片及点击计数，D1 用来保存点击数和最后一次校验通过的额度快照。数据库结构见 `cloud/schema.sql`。现有本地 SQLite 文件、运行日志和工具凭据不属于部署资源。
 
-从 `AINOOK-Review/cloud` 目录部署时先运行 `python3 build.py`，再运行 `npx wrangler deploy`。GitHub 自动构建使用相同的根目录和命令。Cloudflare 按每小时第 57 分钟从 GitHub 取额度快照。每日资讯任务在北京时间 08:45 校验和更新 `AINOOK-Review/published/reader-cloud.json`，随后由 Cloudflare 构建并发布。验证未通过时保留原来的数据。
+从 `AINOOK-Review/cloud` 目录部署时先运行 `python3 build.py`，再运行 `npx wrangler deploy`。Cloudflare 自动构建使用相同的根目录和命令。Cloudflare 按每小时第 57 分钟从 GitHub 取额度快照。
+
+资讯构建直接读取对应提交中的 `data/latest.json`。内容方推送新刊次时，Cloudflare 自动构建。北京时间 08:45 前构建时，上一期与经过校验的新一期一起打包，站点到发布时间切换；08:45 后才交付时，构建成功即发布。未来时间标记的刊次还会等待其标记时间。资料校验不通过时构建失败，原部署继续服务。GitHub Actions 的 08:45 任务保留同步副本 `AINOOK-Review/published/reader-cloud.json`；Cloudflare 读取原文件进行发布。离线检查指定刊次可用 `python3 build.py --edition /path/to/reader-edition.json`。
 
 在 Cloudflare 的「设置 → 构建」中，生产分支填 `main`，根目录填 `AINOOK-Review/cloud`，构建命令和部署命令使用上面的两条命令。「禁用构建」保持关闭，部署使用 Cloudflare 生成的构建令牌。连接后，下一次向 `main` 推送提交时会开始构建。在「部署」中核对构建结果和提交版本，再到公网首页检查。
 
-运行时的 `DB` 绑定使用 `ainook-site` 保存点击计数和额度快照，`WISH_LIMIT` 限制过于频繁的点击请求。当前无需额外的运行时变量、构建密钥、部署挂钩、消息队列或邮件触发器。每天 08:45 的资讯任务由 GitHub Actions 触发，设置里的每小时第 57 分钟触发器负责读取额度快照。
+运行时的 `DB` 绑定使用 `ainook-site` 保存点击计数和额度快照，`WISH_LIMIT` 限制过于频繁的点击请求。构建监视范围须包含根目录的 `data/latest.json`，以及 `AINOOK-Review` 的站点源码和素材。设置里的每小时第 57 分钟触发器负责读取额度快照。
 
 ## Python 常驻部署
 

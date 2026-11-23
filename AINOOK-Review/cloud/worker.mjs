@@ -243,15 +243,16 @@ function filteredPage(response, path, filters, results, total) {
     .transform(response);
 }
 
-async function readNews(env, url, path, api) {
+async function readNews(env, url, path, api, edition) {
   if (Object.hasOwn(routes.legacy, path)) {
     if (!api) return Response.redirect(new URL(routes.legacy[path] + url.search, url), 302);
     path = routes.legacy[path];
   }
   if (path === '/models') return api ? json({status: 'not_configured', items: []})
     : Response.redirect(new URL('/news/model', url), 302);
-  if (!api && (!url.search || path === '/news/sources')) return rendered(env, url, path.slice(1));
-  const index = await asset(env, url, 'news-index.json').then(response => response.json());
+  const listPath = edition + path.slice(1);
+  if (!api && (!url.search || path === '/news/sources')) return rendered(env, url, listPath);
+  const index = await asset(env, url, edition + 'news-index.json').then(response => response.json());
   if (path === '/news/sources') return json({mode: 'edition', updated: index.updated, sources: index.sources});
   const params = url.searchParams;
   const wantedSource = params.get('source') || '';
@@ -261,7 +262,7 @@ async function readNews(env, url, path, api) {
   const rawOffset = params.get('offset') ?? '0';
   if (!/^[+-]?\d+$/.test(rawOffset)) return json({error: '请求参数无效'}, 400);
   const offset = Math.max(0, Math.min(10000, Number(rawOffset)));
-  if (!api && !offset && !query && !source && days === 'all') return rendered(env, url, path.slice(1));
+  if (!api && !offset && !query && !source && days === 'all') return rendered(env, url, listPath);
   const cutoff = days === 'all' ? 0 : time(index.updated) - Number(days) * DAY;
   const keyword = query.toLowerCase().replaceAll('ß', 'ss').replaceAll('ς', 'σ');
   const filtered = index.items.filter(item => (path === '/news' || '/' + item.section === path) &&
@@ -269,22 +270,23 @@ async function readNews(env, url, path, api) {
     item.search.includes(keyword));
   const results = filtered.slice(offset, offset + 20);
   if (api) {
-    const items = await Promise.all(results.map(item => asset(env, url, 'article/' + item.id + '.json')
+    const items = await Promise.all(results.map(item => asset(env, url, edition + 'article/' + item.id + '.json')
       .then(response => response.json())));
     return json({items, total: filtered.length, offset, limit: 20});
   }
-  const page = await rendered(env, url, path.slice(1));
+  const page = await rendered(env, url, listPath);
   return filteredPage(page, path, {query, source, days, offset}, results, filtered.length);
 }
 
-async function article(env, url, path, api) {
+async function article(env, url, path, api, edition) {
   const item = path.slice('/article/'.length);
-  if (!/^[0-9a-f]{24}$/.test(item) || !routes.policies['/_ainook/article/' + item + '.html']) {
+  const file = edition + 'article/' + item;
+  if (!/^[0-9a-f]{24}$/.test(item) || !routes.policies['/_ainook/' + file + '.html']) {
     return json({error: '资讯不存在'}, 404);
   }
-  if (api) return json(await asset(env, url, 'article/' + item + '.json').then(response => response.json()));
-  if (url.search === '?inline=1') return rendered(env, url, 'article/' + item + '-inline');
-  return rendered(env, url, 'article/' + item);
+  if (api) return json(await asset(env, url, file + '.json').then(response => response.json()));
+  if (url.search === '?inline=1') return rendered(env, url, file + '-inline');
+  return rendered(env, url, file);
 }
 
 async function handle(request, env) {
@@ -314,9 +316,10 @@ async function handle(request, env) {
   }
   const api = path.startsWith('/api/site/');
   const route = api ? path.slice('/api/site'.length) : path;
-  if (route.startsWith('/article/')) return article(env, url, route, api);
+  const edition = routes.newsReleaseAt && Date.now() >= routes.newsReleaseAt ? 'scheduled-edition/' : '';
+  if (route.startsWith('/article/')) return article(env, url, route, api, edition);
   if (routes.news.includes(route) || Object.hasOwn(routes.legacy, route) ||
-      ['/news/sources', '/models'].includes(route)) return readNews(env, url, route, api);
+      ['/news/sources', '/models'].includes(route)) return readNews(env, url, route, api, edition);
   if (path === '/robots.txt') return new Response('User-agent: *\nDisallow: /\n', {
     headers: {'Content-Type': 'text/plain; charset=utf-8'},
   });

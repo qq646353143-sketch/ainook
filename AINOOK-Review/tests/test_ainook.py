@@ -31,6 +31,47 @@ from ainook.wishes import Wishes
 
 
 class EditionSyncTests(unittest.TestCase):
+    def test_cloud_build_promotes_source_at_beijing_cutoff_even_if_scheduled_copy_is_stale(self):
+        module = run_path(str(Path(__file__).resolve().parents[1] / 'cloud/sync_edition.py'))
+        build_editions = module['build_editions']
+
+        def edition(day):
+            return {'meta': {'updated': f'2026-11-{day} 07:45'}, 'gossip': [], 'news': [
+                {'id': f'news-{day}-{index}', 't': '标题', 's': '摘要', 'd': f'11-{day} 07:00',
+                 'n': '来源', 'u': 'https://example.org/news', 'p': ['全文'], 'c': '模型更新'}
+                for index in range(30)
+            ]}
+
+        current, prior, stale = edition(23), edition(22), edition(21)
+        sha_current, sha_prior = 'a' * 40, 'b' * 40
+
+        def history(url):
+            if 'api.github.com' in url:
+                return [{'sha': sha_current}, {'sha': sha_prior}]
+            return current if sha_current in url else prior
+
+        def unexpected_history(_):
+            self.fail('An edition released after the cutoff must build directly from the checkout')
+
+        before = datetime.fromisoformat('2026-11-23T08:44:59+08:00')
+        cutoff = before + timedelta(seconds=1)
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / 'latest.json'
+            backup = Path(tmp) / 'reader-cloud.json'
+            source.write_text(json.dumps(current), encoding='utf-8')
+            backup.write_text(json.dumps(stale), encoding='utf-8')
+            live, next_issue, release = build_editions(source, backup, now=before, fetch=history)
+            self.assertEqual((live.updated.day, next_issue.updated.day, release), (22, 23, cutoff))
+
+            live, next_issue, release = build_editions(source, backup, now=cutoff, fetch=unexpected_history)
+            self.assertEqual((live.updated.day, next_issue, release), (23, None, None))
+
+            current['news'][1]['id'] = current['news'][0]['id']
+            source.write_text(json.dumps(current), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, '资讯标识重复'):
+                build_editions(source, backup, now=cutoff, fetch=unexpected_history)
+            self.assertEqual(json.loads(backup.read_text(encoding='utf-8')), stale)
+
     def test_validate_accepts_k_only_gossip_and_rejects_duplicate_ids(self):
         sync_script = Path(__file__).resolve().parents[2] / 'scripts/sync_edition.py'
         validate = run_path(str(sync_script))['validate']
