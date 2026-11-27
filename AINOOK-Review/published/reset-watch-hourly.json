@@ -75,21 +75,6 @@
       "text": "公布两次重置卡安排中的第一次",
       "url": "https://x.com/thsottiaux/status/2116692529970311254",
       "source": "catalog-seed"
-    },
-    {
-      "id": "rw-codex-post-2115273064481218829",
-      "platform": "codex",
-      "platform_label": "Codex",
-      "person": "Tibo (@thsottiaux)",
-      "handle": "thsottiaux",
-      "kind": "general_reset",
-      "state": "confirmed",
-      "announced_at": "2026-10-28T10:42:53+08:00",
-      "confirmed_at": "2026-10-28T10:42:53+08:00",
-      "expires_at": null,
-      "text": "第 23 天宣布当天安排重置",
-      "url": "https://x.com/thsottiaux/status/2115273064481218829",
-      "source": "catalog-seed+semantic"
     }
   ]
 }
